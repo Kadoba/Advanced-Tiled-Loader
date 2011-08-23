@@ -101,7 +101,7 @@ function IsoExample.draw()
 	-- Queue our guy to be drawn after the tile he's on and then draw the map.
 	local maxDraw = global.benchmark and 20 or 1
 	for i=1,maxDraw do 
-		if not map.useBatch then
+		if not global.useBatch then
 			layer:drawAfterTile(Guy.tileY, Guy.tileX, Guy.draw)
 		end
 		map:draw() 
