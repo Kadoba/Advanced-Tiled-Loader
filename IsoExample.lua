@@ -101,7 +101,7 @@ function IsoExample.draw()
 	-- Queue our guy to be drawn after the tile he's on and then draw the map.
 	local maxDraw = global.benchmark and 20 or 1
 	for i=1,maxDraw do 
-		if not layer.useBatch then
+		if not map.useBatch then
 			layer:drawAfterTile(Guy.tileY, Guy.tileX, Guy.draw)
 		end
 		map:draw() 
@@ -116,8 +116,8 @@ function IsoExample.draw()
 		love.graphics.setColor(0,0,0,100)
 		love.graphics.rectangle("fill",0,198,love.graphics.getWidth(),17)
 		love.graphics.setColor(255,255,255,255)
-		love.graphics.print( useBatch and "Can't use drawAfterTile() with SpriteBatches!" or 
-							"Use WASD to move me!", useBatch and 280 or 330, 200)
+		love.graphics.print( global.useBatch and "Can't use drawAfterTile() with SpriteBatches!" or 
+							"Use WASD to move me!", global.useBatch and 280 or 330, 200)
 	end
 end
 
