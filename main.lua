@@ -1,4 +1,3 @@
-
 -- Some global stuff that the examples use.
 global = {}
 global.limitDrawing = false		-- If true then the drawing range example is shown
@@ -72,7 +71,7 @@ function love.keypressed(k)
 	
 	-- limit drawing
 	if k == 'c' then
-		if global.limitDrawing then global.limitDrawing = false else global.limitDrawing = true end
+		global.limitDrawing = not global.limitDrawing
 	end
 	
 	-- benchmark
