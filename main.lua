@@ -76,12 +76,12 @@ function love.keypressed(k)
 	
 	-- benchmark
 	if k == 'v' then
-		if global.benchmark then global.benchmark = false else global.benchmark = true end
+		global.benchmark = not global.benchmark
 	end
 	
 	-- use sprite batches
 	if k == 'b' then
-		if global.useBatch then global.useBatch = false else global.useBatch = true end
+		global.useBatch = not global.useBatch
 	end
 	
 	-- Call keypressed in our example if it is defined
