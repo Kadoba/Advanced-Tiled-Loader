@@ -1,3 +1,4 @@
+
 -- Some global stuff that the examples use.
 global = {}
 global.limitDrawing = false		-- If true then the drawing range example is shown
@@ -8,8 +9,8 @@ global.ty = 0					-- Y translation of the screen
 global.scale = 1				-- Scale of the screen
 
 -- Load the examples
-local example = {require("DesertExample.lua"), require("IsoExample.lua"), 
-				  require("PerspExample.lua"), require("SewerExample.lua")}
+local example = {require("DesertExample"), require("IsoExample"),  
+				 require("PerspExample"), require("SewerExample")}
 				  
 local num = 1					-- The map we're currently on
 local fps = 0					-- Frames Per Second
@@ -71,17 +72,17 @@ function love.keypressed(k)
 	
 	-- limit drawing
 	if k == 'c' then
-		global.limitDrawing = not global.limitDrawing
+		if global.limitDrawing then global.limitDrawing = false else global.limitDrawing = true end
 	end
 	
 	-- benchmark
 	if k == 'v' then
-		global.benchmark = not global.benchmark
+		if global.benchmark then global.benchmark = false else global.benchmark = true end
 	end
 	
 	-- use sprite batches
 	if k == 'b' then
-		global.useBatch = not global.useBatch
+		if global.useBatch then global.useBatch = false else global.useBatch = true end
 	end
 	
 	-- Call keypressed in our example if it is defined
@@ -96,7 +97,8 @@ function love.draw()
 	
 	-- Insert display text into tables
 	instructions = {"Arrow Keys - Move", "Mouse Wheel - Zoom", "Z and X - Change Map", 
-					"C - Toggle Limit Drawing", "V - Toggle Benchmark", "B - Toggle Batches"}
+					"C - Toggle Limit Drawing", "V - Toggle Benchmark", "B - Toggle Batches",
+					"WSAD - Move Character"}
 	information = {string.format("(%d,%d)", -global.tx, -global.ty), 
 					"Scale: " .. global.scale, string.format("Map %d of %d", num, #example), 
 					global.limitDrawing and "Limiting drawing" or "Drawing entire screen",
@@ -105,7 +107,7 @@ function love.draw()
 	
 	-- Draw a box so we can see the text easier
 	love.graphics.setColor(0,0,0,100)
-	love.graphics.rectangle("fill",0,0,350,120)
+	love.graphics.rectangle("fill",0,0,350, #instructions*20)
 	love.graphics.setColor(255,255,255,255)
 	
 	-- print display text
@@ -115,4 +117,5 @@ function love.draw()
 	for i=1,#information do
 		love.graphics.print(information[i], 160, (i-1)*20)
 	end
+
 end

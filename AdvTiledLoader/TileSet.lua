@@ -9,7 +9,7 @@ local TileSet = {}
 TileSet.__index = TileSet
 
 -- Creates a new tileset.
-function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop)
+function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop, prop)
 	assert( img and name and tilew and tileh and width and height and firstgid,
 		   "TileSet:new - Needs at least 7 parameters for image, name, " ..
 		   "tileWidth, tileHeight, width, height, and firstgid")
@@ -26,6 +26,7 @@ function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, ma
 	ts.spacing = space or 0		-- The spacing in pixels between each tile
 	ts.margin = marg or 0		-- The margin in pixels surrounding the entire tile set.
 	ts.tileProperties = tprop or {}	-- Properties of contained tiles indexed by the tile's gid
+	ts.properties = prop or {}	-- The properties of the tileset
 	
 	return setmetatable(ts, TileSet)
 end

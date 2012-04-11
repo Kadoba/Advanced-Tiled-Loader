@@ -1,5 +1,6 @@
+
 -- Setup
-local loader = require("AdvTiledLoader/Loader")
+local loader = require("AdvTiledLoader/loader")
 loader.path = "maps/"
 local map = loader.load("perspective_walls.tmx")
 
@@ -24,7 +25,7 @@ function PerspExample.draw()
 	love.graphics.translate(ftx, fty)
 	
 	-- Limit the draw range 
-	if global.limitDraing then 
+	if global.limitDrawing then 
 		map:autoDrawRange(ftx, fty, scale, -100) 
 	else 
 		map:autoDrawRange(ftx, fty, scale, 50) 

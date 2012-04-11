@@ -5,7 +5,17 @@ Advanced Tiled Loader by Kadoba (Casey Baxter)
 
 CHANGES:
 
-0.9.0
+0.10.0 (20/22/11)
+- 2d arrays are replaced with a much easier to use grid class.
+- Tiles are now directly inserted into TileLayer.tileData. You no longer have to look them up via 
+	their ID in Map.tiles.
+- Tile indexes are now the same as their coordinants as shown inside the Tiled.
+- Added support for Tiled version 0.8.0. This includes tile rotation, polygon objects,
+	polyline objects, tilemap offset, and tilemap propterties.
+- Moved the object drawing code from object layers to the objects themselves.
+- Added functions tileCopy(), tilePaste(), tileRotate(), tileFlipX(), tileFlipY() to TileLayers.
+
+0.9.0 (8/22/11)
 - Advanced Tile Loader now has a wiki page and a github repository!
 - Cleaned up the code quite a bit.
 - Classes are now broken up into individual files rather than grouping similar ones into one file.
@@ -18,7 +28,7 @@ CHANGES:
 - Tile:draw() now accepts parameters for scaling, rotation, and offset.
 - TileLayer:drawAfterTile() now works with multiple functions
 - Forcing a redraw is now automatic when you switch sprite batch modes.
-- Added support for flipped tiles that were introduced in Tiled version 8.0.0
+- Added support for flipped tiles that were introduced in Tiled version 0.7.1
 
 0.8.2 (5/9/11):
 - Tileset images are now cached between maps.
@@ -37,11 +47,9 @@ CHANGES:
 0.8.0 (2/28/11):
 - Initial release
 
-The LOVE forum thread:
-http://love2d.org/forums/viewtopic.php?f=5&t=2567
 
-GitHub Repository:
-https://github.com/Kadoba/Advanced-Tiled-Loader
+For more information see here:
+http://love2d.org/forums/viewtopic.php?f=5&t=2567
 
 --------------------------------------------------------------------------------------
 

@@ -1,15 +1,14 @@
+
 -- Setup
-local loader = require("AdvTiledLoader/Loader")
+local loader = require("AdvTiledLoader/loader")
 loader.path = "maps/"
 local map = loader.load("desert.tmx")
 local layer = map.tl["Ground"]
-local displayTime = 0 
-local displayMax = 2
 
 -- This is the guy we'll be moving around.
 local Guy = map.ol["Object1"]:newObject("Guy", "Entity",0,0,32,64)
-Guy.tileX = 13		-- The horizontal tile
-Guy.tileY = 24		-- The vertical tile
+Guy.tileX = 8		-- The horizontal tile
+Guy.tileY = 22		-- The vertical tile
 Guy.facing = "down"	-- The direction our guy is facing
 Guy.quads = {		-- The frames of the image
 		down = 		love.graphics.newQuad(0,0,32,64,256,64),
@@ -23,6 +22,8 @@ Guy.quads = {		-- The frames of the image
 	}
 -- The image of our guy
 Guy.image = love.graphics.newImage("images/guy.png")
+Guy.width = Guy.image:getWidth()
+Guy.height = Guy.image:getHeight()
 
 -- Move the guy around the tiles
 function Guy.moveTile(x,y)
@@ -32,18 +33,15 @@ function Guy.moveTile(x,y)
 	elseif y > 0 then Guy.facing = "down"
 	else Guy.facing = "up" end
 	-- Grab the tile
-	if layer.tileData[Guy.tileY+y] then
-		tile = map.tiles[layer.tileData[Guy.tileY+y][Guy.tileX+x]]
-	else
-		tile = nil
-	end
+	local tile = layer.tileData(Guy.tileX+x, Guy.tileY+y)
+
 	-- If the tile doesn't exist or is an obstacle then exit the function
 	if tile == nil then return end
 	if tile.properties.obstacle then return end
 	-- Otherwise change the guy's tile
 	Guy.tileX = Guy.tileX + x
 	Guy.tileY = Guy.tileY + y
-	Guy:moveTo((Guy.tileX-1)*map.tileWidth, (Guy.tileY-1)*map.tileHeight-40)
+	Guy:moveTo(Guy.tileX*map.tileWidth, (Guy.tileY+1)*map.tileHeight-Guy.height)
 end
 
 -- Do this at first to make sure the guy is drawn correctly.
@@ -58,7 +56,7 @@ end
 
 
 -- Our example class
-DesertExample = {}
+local DesertExample = {}
 
 -- Called from love.keypressed()
 function DesertExample.keypressed(k)
@@ -72,8 +70,8 @@ end
 function DesertExample.reset()
 	global.tx = -5
 	global.ty = -434
-	Guy.tileX = 13
-	Guy.tileY = 24
+	Guy.tileX = 8
+	Guy.tileY = 22
 	Guy.moveTile(0,0)
 	Guy.facing = "down"
 	displayTime = 0
@@ -112,14 +110,6 @@ function DesertExample.draw()
 	
 	-- Reset the scale and translation.
 	love.graphics.pop()
-	
-	-- Display movement instructions for a second
-	if displayTime < displayMax then
-		love.graphics.setColor(0,0,0,100)
-		love.graphics.rectangle("fill",0,198,love.graphics.getWidth(),17)
-		love.graphics.setColor(255,255,255,255)
-		love.graphics.print("Use WASD to move me!", 330, 200)
-	end
 end
 
 return DesertExample

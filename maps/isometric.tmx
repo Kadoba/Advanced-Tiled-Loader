@@ -60,5 +60,17 @@
   <object x="2183" y="747" width="228" height="96"/>
   <object name="fddsadsa" type="warp" x="960" y="416" width="192" height="96"/>
   <object x="1100" y="556" width="138" height="23"/>
+  <object x="218" y="217">
+   <polyline points="0,0 14,-90 36,3"/>
+  </object>
+  <object x="243" y="174">
+   <polyline points="0,0 -17,0"/>
+  </object>
+  <object x="302" y="219">
+   <polyline points="0,0 -2,-91 -36,-94 28,-91"/>
+  </object>
+  <object x="357" y="125">
+   <polyline points="0,0 7,96 41,98"/>
+  </object>
  </objectgroup>
 </map>

@@ -4,7 +4,7 @@
 
 -- Setup
 local assert = assert
-Tile = {}
+local Tile = {}
 Tile.__index = Tile
 
 -- Creates a new tile and returns it.
@@ -20,10 +20,10 @@ function Tile:new(id, tileset, quad, width, height, prop)
 	return setmetatable(tmp, Tile)
 end
 
--- Draws the tile at the given location
+-- Draws the tile at the given location 
 function Tile:draw(x, y, rotation, scaleX, scaleY, offsetX, offsetY)
-	love.graphics.drawq(self.tileset.image, self.quad, x, y, rotation, 
-						scaleX, scaleY, offsetX, offsetY)
+	love.graphics.drawq(self.tileset.image, self.quad, self.tileset.tileoffset.x + x, 
+						self.tileset.tileoffset.y + y, rotation, scaleX, scaleY, offsetX, offsetY)
 end
 
 -- Return the Tile class

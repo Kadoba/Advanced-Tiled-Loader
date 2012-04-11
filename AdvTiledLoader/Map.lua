@@ -27,7 +27,7 @@ Map.__index = Map
 function Map:new(name, width, height, tileWidth, tileHeight, orientation, properties)
 
 	-- Our map
-	map = {}
+	local map = {}
 	
 	-- Public:
 	map.name = name or "Unnamed Nap"				-- Name of the map
@@ -59,6 +59,7 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, proper
 	map._specialRedraw = true		-- If true then the map needs to redraw sprite batches.
 	map._forceSpecialRedraw = false	-- If true then the next special redraw is forced
 	map._previousUseSpriteBatch = false   -- The previous _useSpiteBatch. If this changed then we redraw sprite batches.
+	map._tileClipboard	=	nil		-- The value that stored for TileLayer:tileCopy() and TileLayer:tilePaste()
 	
 	-- Return the new map
 	return setmetatable(map, Map)
@@ -178,6 +179,11 @@ function Map:autoDrawRange(tx, ty, scale, pad)
 	end
 end
 
+-- A short-hand to retreive tiles from a layer's tileData.
+function Map:__call(layerName, x, y)
+	return self.tileLayers.tileData(x,y)
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Private Functions
 ----------------------------------------------------------------------------------------------------
@@ -208,10 +214,10 @@ function Map:_updateTileRange()
 			y1 = floor(y1/self.tileHeight)
 		
 			-- Make sure that we stay within the boundry of the map
-			x1 = x1 > 1 and x1 or 1
-			y1 = y1 > 1 and y1 or 1
-			x2 = x2 < self.width and x2 or self.width
-			y2 = y2 < self.height and y2 or self.height
+			x1 = x1 > 0 and x1 or 0
+			y1 = y1 > 0 and y1 or 0
+			x2 = x2 < self.width-1 and x2 or self.width-1
+			y2 = y2 < self.height-1 and y2 or self.height-1
 		
 		else
 			-- If the drawing range isn't defined then we draw all the tiles
@@ -228,10 +234,10 @@ function Map:_updateTileRange()
 			y2 = ceil((y2+heightOffset)/self.tileHeight)
 		-- else draw everything
 		else
-			x1 = 1
-			y1 = 1
-			x2 = self.width
-			y2 = self.height
+			x1 = 0
+			y1 = 0
+			x2 = self.width-1
+			y2 = self.height-1
 		end
 	end
 	

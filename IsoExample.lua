@@ -1,10 +1,9 @@
+
 -- Setup
-local loader = require("AdvTiledLoader/Loader")
+local loader = require("AdvTiledLoader/loader")
 loader.path = "maps/"
 local map = loader.load("isometric.tmx")
 local layer = map.tl.Ground
-local displayTime = 0 
-local displayMax = 2
 
 -- The guy we're going to be moving around
 local Guy = {
@@ -34,11 +33,7 @@ function Guy.move(x,y)
 	elseif y > 0 then Guy.facing = "downleft"
 	else Guy.facing = "upright" end
 	-- Grab the tile
-	if layer.tileData[Guy.tileY+y] then
-		tile = map.tiles[layer.tileData[Guy.tileY+y][Guy.tileX+x]]
-	else
-		tile = nil
-	end
+	local tile = layer.tileData(Guy.tileX+x, Guy.tileY+y)
 	-- If the tile doesn't exist or is an obstacle then exit the function
 	if tile == nil then return end
 	if tile.properties.obstacle then return end
@@ -54,7 +49,7 @@ function Guy.draw(x,y)
 end
 
 -- Our example class
-IsoExample = {}
+local IsoExample = {}
 
 -- Called from love.keypressed()
 function IsoExample.keypressed(k)
@@ -84,6 +79,7 @@ function IsoExample.draw()
 
 	-- Set sprite batches
 	map.useSpriteBatch = global.useBatch
+	
 
 	-- Scale and translate the game screen for map drawing
 	local ftx, fty = math.floor(global.tx), math.floor(global.ty)
@@ -92,7 +88,7 @@ function IsoExample.draw()
 	love.graphics.translate(ftx, fty)
 	
 	-- Limit the draw range 
-	if global.limitDraing then 
+	if global.limitDrawing then 
 		map:autoDrawRange(ftx, fty, global.scale, -100) 
 	else 
 		map:autoDrawRange(ftx, fty, global.scale, 50) 
@@ -101,8 +97,10 @@ function IsoExample.draw()
 	-- Queue our guy to be drawn after the tile he's on and then draw the map.
 	local maxDraw = global.benchmark and 20 or 1
 	for i=1,maxDraw do 
-		if not global.useBatch then
-			layer:drawAfterTile(Guy.tileY, Guy.tileX, Guy.draw)
+		if layer.map.useSpriteBatch then
+			layer:clearAfterTile()
+		else
+			layer:drawAfterTile(Guy.tileX, Guy.tileY, Guy.draw)
 		end
 		map:draw() 
 	end
@@ -111,14 +109,6 @@ function IsoExample.draw()
 	-- Reset the scale and translation.
 	love.graphics.pop()
 	
-	-- Display movement instructions for a second
-	if displayTime < displayMax then
-		love.graphics.setColor(0,0,0,100)
-		love.graphics.rectangle("fill",0,198,love.graphics.getWidth(),17)
-		love.graphics.setColor(255,255,255,255)
-		love.graphics.print( global.useBatch and "Can't use drawAfterTile() with SpriteBatches!" or 
-							"Use WASD to move me!", global.useBatch and 280 or 330, 200)
-	end
 end
 
 return IsoExample

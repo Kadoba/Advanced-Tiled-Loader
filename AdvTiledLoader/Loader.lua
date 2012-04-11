@@ -11,11 +11,11 @@ local cache = setmetatable({}, {__mode = "v"})
 local cache_imagesize = setmetatable({}, {__mode="k"})
 
 -- Decompresses gzip and zlib
-local decompress = require(TILED_LOADER_PATH .. "external/deflatelua.lua")
+local decompress = require(TILED_LOADER_PATH .. "external/deflatelua")
 -- Parser than turns an XML file into a table
 local xml_to_table = require(TILED_LOADER_PATH .. "external/xml")
 -- Base64 parser, Turns base64 strings into other data formats
-local base64 = require(TILED_LOADER_PATH .. "base64")
+local base64 = require(TILED_LOADER_PATH .. "Base64")
 
 -- Get the map classes
 local Map = require(TILED_LOADER_PATH .. "Map")
@@ -200,8 +200,9 @@ function Loader._processTileSet(t, map)
 		   "Loader._processTileSet - Tileset data is corrupt")
 	
 	-- Temporary storage
-	local image, imageWidth, imageHeight, path
+	local image, imageWidth, imageHeight, path, prop
 	local tileProperties = {}
+	local tileoffset = {x=0,y=0}
 	
 	-- Process elements
 	for _, v in ipairs(t) do
@@ -243,6 +244,16 @@ function Loader._processTileSet(t, map)
 				end
 			end
 		end
+		
+		-- Process tile set properties
+		if v.label == "properties" then
+			local tileSetProperties = Loader._processProperties(v)
+		end
+		
+		-- Get the tile offset if there is one.
+		if v.label == "tileoffset" then
+			tileoffset.x, tileoffset.y = tonumber(v.xarg.x or 0), tonumber(v.xarg.y or 0)
+		end
 
 	end
 	
@@ -250,11 +261,13 @@ function Loader._processTileSet(t, map)
 	assert(image, "Loader._processTileSet - Tileset did not contain an image")
 
 	-- Return the TileSet
-	return TileSet:new(image, Loader._checkName(map.tilesets, t.xarg.name), 
+	local tileset = TileSet:new(image, Loader._checkName(map.tilesets, t.xarg.name), 
 					   tonumber(t.xarg.tilewidth), tonumber(t.xarg.tileheight),
 					   tonumber(imageWidth), tonumber(imageHeight),
 					   tonumber(t.xarg.firstgid), tonumber(t.xarg.spacing), 
-					   tonumber(t.xarg.margin), tileProperties)
+					   tonumber(t.xarg.margin), tileProperties, tileSetProperties)
+	tileset.tileoffset = tileoffset
+	return tileset
 end
 
 -- Process TileLayer from xml table
@@ -297,7 +310,7 @@ function Loader._processTileLayerData(t)
 	
 	-- If encoded by comma seperated value (csv) then cut each value out and put it into a table.
 	if t.xarg.encoding == "csv" then
-        	string.gsub(t[1], "%d+", function(a) data[#data+1] = tonumber(a) or 0 end)
+        	string.gsub(t[1], "[%-%d]+", function(a) data[#data+1] = tonumber(a) or 0 end)
 	end
 	
 	-- Base64 encoding. See base64.lua for more details.
@@ -352,19 +365,38 @@ function Loader._processObjectLayer(t, map)
 								  t.xarg.opacity)
 					
 	-- Process elements
-	local objects, prop = {}
+	local objects = {}
+	local prop, obj, poly
 	for _, v in ipairs(t) do
 	
 		-- Process objects
+		local obj
 		if v.label == "object" then
-			objects[#objects+1] = Object:new(layer, v.xarg.name, v.xarg.type, tonumber(v.xarg.x), 
+			obj = Object:new(layer, v.xarg.name, v.xarg.type, tonumber(v.xarg.x), 
 											 tonumber(v.xarg.y), tonumber(v.xarg.width), 
 											 tonumber(v.xarg.height), tonumber(v.xarg.gid) )
+			objects[#objects+1] = obj
 			for _, v2 in ipairs(v) do
+			
+				-- Process object properties
 				if v2.label == "properties" then 
-					objects[#objects].properties = Loader._processProperties(v2)
+					obj.properties = Loader._processProperties(v2)
 				end
+				
+				-- Process polyline objects
+				if v2.label == "polyline" then
+					obj.polyline = {}
+					string.gsub(v2.xarg.points, "[%-%d]+", function(a) obj.polyline[#obj.polyline+1] = tonumber(a) or 0 end)
+				end
+				
+				-- Process polyline objects
+				if v2.label == "polygon" then
+					obj.polygon = {}
+					string.gsub(v2.xarg.points, "[%-%d]+", function(a) obj.polygon[#obj.polygon+1] = tonumber(a) or 0 end)
+				end
+			
 			end
+			obj:updateDrawInfo()
 		end
 		
 		-- Process properties

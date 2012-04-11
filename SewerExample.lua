@@ -1,5 +1,6 @@
+
 -- Setup
-local loader = require("AdvTiledLoader/Loader")
+local loader = require("AdvTiledLoader/loader")
 loader.path = "maps/"
 local map = loader.load("sewers.tmx")
 local SewerExample = {}

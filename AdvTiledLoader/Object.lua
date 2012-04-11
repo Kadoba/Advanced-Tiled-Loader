@@ -21,10 +21,6 @@ function Object:new(layer, name, type, x, y, width, height, gid, prop)
 	obj.gid = gid				-- The object's associated tile. If false an outline will be drawn.
 	obj.properties = prop or {} -- Properties set by tiled.
 	
-	obj.draw = nil				-- You can assign a function to this to call instead of the object's
-								-- normal drawing function. It must be able to take x and y as
-								-- parameters.
-	
 	-- drawInfo stores values needed to actually draw the object. You can either set these yourself
 	-- or use updateDrawInfo to do it automatically.
 	obj.drawInfo = {
@@ -45,8 +41,8 @@ function Object:new(layer, name, type, x, y, width, height, gid, prop)
 		order = 0,
 		
 		-- In addition to this, other drawing information can be stored in the numerical 
-		-- indicies which is context sensitive to the map's orientation and if the object has a gid 
-		-- associated with it or not.
+		-- indicies which is context sensitive to the map's orientation, if the object has a gid, or
+		-- of the object is a polygon or polyline object.
 	} 
 	
 	-- Update the draw info
@@ -60,10 +56,43 @@ end
 function Object:updateDrawInfo()
 	local di = self.drawInfo
 	local map = self.layer.map
+		
+	if self.polygon or self.polyline then
+		-- Reset the draw info
+		self.drawInfo = {}
+		di = self.drawInfo
+		-- Set the box to the first vertex
+		local vertexes = self.polygon or self.polyline
+		-- Create the draw information for each vertex
+		for k,v in ipairs(vertexes) do
+			if k%2 == 1 then
+				if map.orientation == "isometric" then 
+					di[k], di[k+1] = map:fromIso(self.x+vertexes[k], self.y+vertexes[k+1])
+				else
+					di[k], di[k+1] = self.x+vertexes[k], self.y+vertexes[k+1]
+				end
+			end
+		end
+		-- Set the start draw location
+		di.x, di.y = di[1], di[2]
+		-- Prime the bounds
+		di.left, di.right, di.top, di.bottom = di.x, di.x, di.y, di.y
+		-- Go through each vertex and find the highest and lowest values for the bounds.
+		for k,v in ipairs(di) do
+			-- if it's odd then it's an x value
+			if k%2 == 1 then
+				if v < di.left then di.left = v end
+				if v > di.right then di.right = v end
+			-- if it's even it's a y value
+			else
+				if v < di.top then di.top = v end
+				if v > di.bottom then di.bottom = v end
+			end
+		end
+		di.order = di.bottom
 	
 	-- Isometric map
-	if map.orientation == "isometric" then
-	
+	elseif map.orientation == "isometric" then
 		-- Is a tile object
 		if self.gid then
 			local t = map.tiles[self.gid]
@@ -72,10 +101,8 @@ function Object:updateDrawInfo()
 			di.order = di.y
 			di.x, di.y = di.x - map.tileWidth/2, di.y - th
 			di.left, di.right, di.top, di.bottom = di.x, di.x+tw, di.y , di.y +th
-		
 		-- Is not a tile object
 		else
-			-- 1-8:polygon verticies
 			di[1], di[2] = map:fromIso(self.x, self.y)
 			di[3], di[4] = map:fromIso(self.x + self.width, self.y)
 			di[5], di[6] = map:fromIso(self.x + self.width, self.y + self.height)
@@ -86,7 +113,6 @@ function Object:updateDrawInfo()
 		
 	-- Orthogonal map
 	else
-	
 		-- Is a tile object
 		if self.gid then
 			local t = map.tiles[self.gid]
@@ -95,13 +121,12 @@ function Object:updateDrawInfo()
 			di.order = di.y
 			di.y = di.y - th
 			di.left, di.top, di.right, di.bottom = di.x, di.y, di.x+tw, di.y+th
-			
 		-- Is not a tile object
 		else
-			-- 1:width, 2:height
 			di.x, di.y = self.x, self.y
-			di[1], di[2] = self.width, self.height
-			di.left, di.top, di.right, di.bottom = di.x, di.y , di.x+di[1], di.y +di[2]
+			di[1], di[2] = self.x, self.y
+			di[3], di[4] = self.width > 20 and self.width or 20, self.height > 20 and self.height or 20
+			di.left, di.top, di.right, di.bottom = di.x, di.y , di.x+di[3], di.y +di[4]
 			di.order = 1
 		end
 	end
@@ -126,6 +151,69 @@ function Object:resize(w,h)
 	self.width = w or self.width
 	self.height = h or self.height
 	self.updateDrawInfo()
+end
+
+-- Draw the object. The passed color is the color of the object layer the object belongs to.
+function Object:draw(x, y, r, g, b, a)
+	
+	local di = self.drawInfo
+	love.graphics.setLineWidth(2)
+
+	-- The object is a polyline.
+	if self.polyline then
+		love.graphics.push()
+		love.graphics.translate(0,1)
+		love.graphics.setColor(0, 0, 0, a)
+		love.graphics.line( unpack(di) )
+		love.graphics.pop()
+		love.graphics.setColor(r, g, b, a)
+		love.graphics.line( unpack(di) )
+		
+	-- The object is a polygon.
+	elseif self.polygon then
+		love.graphics.push()
+		love.graphics.translate(0,1)
+		love.graphics.setColor(0, 0, 0, a)
+		love.graphics.polygon( "line", unpack(di) )
+		love.graphics.pop()
+		love.graphics.setColor(r,g,b,a)
+		love.graphics.polygon( "line", unpack(di) )	
+		
+	-- The object is a tile object. Draw the tile.
+	elseif self.gid then
+		local tile = self.layer.map.tiles[self.gid]
+		tile:draw(self.x, self.y - tile.height)
+		
+	-- Map is isometric. Draw a parallelogram.
+	elseif self.layer.map.orientation == "isometric" then
+		love.graphics.setColor(r, g, b, a/5)
+		love.graphics.polygon("fill", unpack(di))
+		
+		love.graphics.push()
+		love.graphics.translate(0,1)
+		love.graphics.setColor(0, 0, 0, a)
+		love.graphics.polygon("line", unpack(di))
+		love.graphics.pop()
+			
+		love.graphics.setColor(r,g,b,a)
+		love.graphics.polygon("line", unpack(di))
+
+	-- Map is orthogonal. Draw a rectangle.
+	else
+		love.graphics.setColor(r, g, b, a/5)
+		love.graphics.rectangle("fill", unpack(di))
+			
+		love.graphics.setColor(0, 0, 0, a)
+		love.graphics.push()
+		love.graphics.translate(1,1)
+		love.graphics.rectangle("line", unpack(di))
+		love.graphics.print(self.name, di.x, di.y-20)
+		love.graphics.pop()
+			
+		love.graphics.setColor(r,g,b,a)
+		love.graphics.rectangle("line", unpack(di))
+		love.graphics.print(self.name, di.x, di.y-20)
+	end
 end
 
 -- Returns the Object class
