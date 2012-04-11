@@ -1,6 +1,5 @@
-
 -- Setup
-local loader = require("AdvTiledLoader/loader")
+local loader = require("AdvTiledLoader/Loader")
 loader.path = "maps/"
 local map = loader.load("desert.tmx")
 local layer = map.tl["Ground"]
