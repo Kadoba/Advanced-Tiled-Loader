@@ -1,6 +1,5 @@
-
--- Add the path so lua knows where to get the files.
-TILED_LOADER_PATH = TILED_LOADER_PATH or "AdvTiledLoader/"
+-- Add the path so the other files knows how to get to each other
+TILED_LOADER_PATH = ({...})[1]:gsub("%.init", "") .. '.'
 
 -- Get the classes
 local mapclasses = require "map"
