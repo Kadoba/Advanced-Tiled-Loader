@@ -1,11 +1,10 @@
-
 Advanced Tiled Loader by Kadoba (Casey Baxter)
 
 --------------------------------------------------------------------------------------
 
 CHANGES:
 
-0.10.0 (20/22/11)
+0.10.0 (04/11/12)
 - 2d arrays are replaced with a much easier to use grid class.
 - Tiles are now directly inserted into TileLayer.tileData. You no longer have to look them up via 
 	their ID in Map.tiles.
