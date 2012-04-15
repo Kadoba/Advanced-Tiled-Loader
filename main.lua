@@ -1,4 +1,3 @@
-
 -- Some global stuff that the examples use.
 global = {}
 global.limitDrawing = false		-- If true then the drawing range example is shown
@@ -55,7 +54,7 @@ end
 function love.keypressed(k)
 	-- quit
     if k == 'escape' then
-        love.event.push('q')
+        (love.event.push or love.event.quit)('q')
     end
 	
 	-- previous map
