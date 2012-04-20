@@ -1,8 +1,18 @@
+
 Advanced Tiled Loader by Kadoba (Casey Baxter)
 
 --------------------------------------------------------------------------------------
 
 CHANGES:
+
+0.10.1 (04/20/12)
+- Added quit compatibility for love 0.8.0 in the example files
+- AdvTiledLoader can now be correctly required from any subfolder
+- Fixed a bug with map.drawObjects not working
+- Undefined object colors will now appear grey instead of black
+- Added Loader.drawObjects and Loader.useSpriteBatch values. These values will be applied to any 
+    new map that is loaded.
+- Fixed a bug where the map would be drawn incorrectly if the map's width and height were different
 
 0.10.0 (04/11/12)
 - 2d arrays are replaced with a much easier to use grid class.

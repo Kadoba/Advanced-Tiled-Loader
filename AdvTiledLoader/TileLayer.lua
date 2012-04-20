@@ -3,6 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 
 -- Setup
+TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Tt]ile[Ll]ayer$", "") .. '.'
 local floor = math.floor
 local type = type
 local love = love
@@ -275,10 +276,23 @@ end
 -- Private
 ----------------------------------------------------------------------------------------------------
 
+
+str = ""
 -- Creates the tileData from a table containing each tile id in sequential order
 -- from left-to-right, top-to-bottom.
 function TileLayer:_populate(t)
 
+	str = ""
+	local lasty = 0
+	for i=1,#t do
+		str = str .. t[i]
+		if lasty ~= math.floor(i/self.map.width) then
+			str = str .. "\n"
+			lasty = math.floor(i/self.map.width)
+		end
+	end
+	
+	
 	-- Some temporary storage
 	local width, height =  self.map.width, self.map.height
 	local tileID
@@ -292,7 +306,7 @@ function TileLayer:_populate(t)
 	
 	-- Go through every tile
 	for x,y,v in self.tileData:rectangle(0,0,width-1,height-1,true) do
-		tileID = t[height*y+x+1] or 0
+		tileID = t[width*y+x+1] or 0
 		
 		-- If the tile has a value in the last three binary digits then we seperate them
 		if tileID >= flipped then 

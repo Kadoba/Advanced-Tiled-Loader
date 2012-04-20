@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 
 -- Define path so lua knows where to look for files.
-TILED_LOADER_PATH = TILED_LOADER_PATH or "AdvTiledLoader/"
+TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Ll]oader$", "") .. '.'
 
 -- A cache to store tileset images so we don't load them multiple times. Filepaths are keys.
 local cache = setmetatable({}, {__mode = "v"})
@@ -29,12 +29,19 @@ local ObjectLayer = require(TILED_LOADER_PATH .. "ObjectLayer")
 local Loader = {
 	path = "", 				-- The path to tmx files.
 	fixPO2 = false, 	    -- If true, pads the images to the power of 2.
-	filterMin = "nearest",	-- The min filter for image:setFilter()
-	filterMag = "nearest",  -- The mag filter for image:setFilter()
+	filterMin = "nearest",	-- The default min filter for image:setFilter()
+	filterMag = "nearest",  -- The default mag filter for image:setFilter()
+	useSpriteBatch = false,	-- The default setting for map.useSpriteBatch
+	drawObjects = true,		-- The default setting for map.drawObjects
 }
+
+local filepath
 
 -- Loads a Map from a tmx file and returns it.
 function Loader.load(filename)
+	
+	filepath = filename
+	filepath = string.gsub(filepath, "[/\\].+$", "") .. "/"
 	
 	-- Read the file and parse it into a table
 	local t = love.filesystem.read(Loader.path .. filename)
@@ -145,6 +152,10 @@ function Loader._processMap(name, t)
 						tonumber(t.xarg.tilewidth), tonumber(t.xarg.tileheight), 
 						t.xarg.orientation)
 							
+	-- Apply the loader settings
+	map.useSpriteBatch = Loader.useSpriteBatch
+	map.drawObjects = Loader.drawObjects
+	
 	-- Now we fill it with the content
 	for _, v in ipairs(t) do
 		
@@ -216,7 +227,7 @@ function Loader._processTileSet(t, map)
 				imageHeight = cache_imagesize[image].height
 			-- Else load it and store in the cache
 			else
-				image = love.image.newImageData(Loader.path .. v.xarg.source) 
+				image = love.image.newImageData(path) 
 				-- transparent color
 				if v.xarg.trans then
 					local trans = { tonumber( "0x" .. v.xarg.trans:sub(1,2) ), 

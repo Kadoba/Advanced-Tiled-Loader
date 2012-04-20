@@ -3,6 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 
 -- Setup
+TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Oo]bject[Ll]ayer$", "") .. '.'
 local love = love
 local unpack = unpack
 local pairs = pairs
@@ -21,7 +22,7 @@ function ObjectLayer:new(map, name, color, opacity, prop)
 	
 	ol.map = map							-- The map this layer belongs to
 	ol.name = name or "Unnamed ObjectLayer"	-- The name of this layer
-	ol.color = color or {255,255,255}		-- The color theme
+	ol.color = color or {128,128,128,255}	-- The color theme
 	ol.opacity = opacity or 1				-- The opacity
 	ol.objects = {}							-- The layer's objects indexed by type
 	ol.properties = prop or {}				-- Properties set by Tiled.
@@ -46,6 +47,10 @@ end
 -- if the object has an associated tile. It tries to draw the objects as closely to the way
 -- Tiled does it as possible.
 function ObjectLayer:draw()
+
+	-- Exit if objects are not suppose to be drawn
+	if not self.map.drawObjects then return end
+
 	local di									-- The draw info
 	local rng = self.map.drawRange				-- The drawing range. [1-4] = x,y,width,height
 	local drawList = {}							-- A list of the objects to be drawn
@@ -75,7 +80,7 @@ function ObjectLayer:draw()
 	-- Draw all the objects in the draw list.
 	for k,obj in ipairs(drawList) do
 		love.graphics.setColor(r,b,g,a)
-		obj:draw(di.x, di.y, unpack(self.color))
+		obj:draw(di.x, di.y, unpack(self.color or neutralColor))
 	end
 	
 	-- Reset the color and line width

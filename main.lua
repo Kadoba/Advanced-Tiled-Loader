@@ -1,3 +1,4 @@
+
 -- Some global stuff that the examples use.
 global = {}
 global.limitDrawing = false		-- If true then the drawing range example is shown
@@ -22,11 +23,11 @@ if example[num].reset then example[num].reset() end
 -- Scroll in and out
 function love.mousepressed( x, y, mb )
 	if mb == "wu" then
-		global.scale = global.scale + 0.2
+		global.scale = global.scale + 0.1
 	end
 
 	if mb == "wd" then
-		global.scale = global.scale - 0.2
+		global.scale = global.scale - 0.1
 	end
 end
 

@@ -21,7 +21,7 @@ local require = require
 local setmetatable = setmetatable
 local _G = _G
 
-local bxor = require ( TILED_LOADER_PATH .. "external/numberlua" ) . bxor
+local bxor = require ( TILED_LOADER_PATH .. "external.numberlua" ) . bxor
 
 --[[NATIVE_BITOPS
 local bxor = bit.bxor
