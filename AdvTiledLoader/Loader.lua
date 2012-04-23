@@ -219,7 +219,7 @@ function Loader._processTileSet(t, map)
 	for _, v in ipairs(t) do
 		-- Process image
 		if v.label == "image" then 
-			path = Loader.path .. v.xarg.source
+			path = filepath .. v.xarg.source
 			-- If the image is in the cache then load it
 			if cache[path] then
 				image = cache[path]
