@@ -35,27 +35,38 @@ local Loader = {
 	drawObjects = true,		-- The default setting for map.drawObjects
 }
 
-local filepath
+local filename -- The name of the tmx file
+local fullpath -- The full path to the tmx file minus the name
 
 -- Loads a Map from a tmx file and returns it.
-function Loader.load(filename)
+function Loader.load(tofile)
 	
-	filepath = Loader.path .. filename
-	filepath = string.gsub(filepath, "[/\\][^/^\\]+$", "") .. "/"
+	-- Get the raw path
+	fullpath = Loader.path .. tofile
+	
+	-- Process directory up
+	while string.find(fullpath, "[/\\][^/^\\]+[/\\]%.%.[/\\]") do
+		fullpath = string.gsub(fullpath, "[/\\][^/^\\]+[/\\]%.%.[/\\]", "/", 1)
+	end
+	
+	-- Get the file name
+	filename = string.match(fullpath, "[^/^\\]+$")
+	-- Get the path to the file
+	fullpath = string.gsub(fullpath, "[^/^\\]+$", "")
 	
 	-- Read the file and parse it into a table
-	local t = love.filesystem.read(Loader.path .. filename)
+	local t = love.filesystem.read(fullpath .. filename)
 	t = xml_to_table(t)
 	
 	-- Get the map and process it
 	for _, v in pairs(t) do
 		if v.label == "map" then
-			return Loader._processMap(Loader.path .. filename, v)
+			return Loader._processMap(fullpath .. filename, v)
 		end
 	end
 	
 	-- If we made this this far then there wasn't a map tag
-	error("Loader.load - No map found in file " .. Loader.path ..  filename)
+	error("Loader.load - No map found in file " .. fullpath .. filename)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -67,10 +78,12 @@ end
 function Loader._newImage(info)
 	local source, padded, image
 	
+	-- If the image information is image data then assign it as the source
 	if info:type() == "ImageData" then  
 		source = info
+	-- Otherwise turn it into image data first
 	else
-		source = love.image._newImageData(info)
+		source = love.image.newImageData(info)
 	end
 
     local w, h = source:getWidth(), source:getHeight()
@@ -219,7 +232,11 @@ function Loader._processTileSet(t, map)
 	for _, v in ipairs(t) do
 		-- Process image
 		if v.label == "image" then 
-			path = filepath .. v.xarg.source
+			path = fullpath .. v.xarg.source
+			-- Process directory up
+			while string.find(path, "[^/^\\]+[/\\]%.%.[/\\]") do
+				path = string.gsub(path, "[^/^\\]+[/\\]%.%.[/\\]", "", 1)
+			end
 			-- If the image is in the cache then load it
 			if cache[path] then
 				image = cache[path]
