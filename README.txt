@@ -4,8 +4,8 @@ Advanced Tiled Loader by Kadoba (Casey Baxter)
 
 CHANGES:
 0.10.2 (04/26/12)
-- Relative paths now fully work. Before, ATL did not to travel backwards in a 
-	directory from a map file to reach a tileset.
+- Relative paths now fully work. Before, ATL did not like to travel backwards in 
+	a directory from a map file to reach a tileset.
 
 0.10.1 (04/20/12)
 - Added quit compatibility for love 0.8.0 in the example files
@@ -77,7 +77,7 @@ http://love2d.org/forums/viewtopic.php?f=5&t=2567
 All images and code is subject to the following license unless otherwise stated:
 
 
-Copyright (c) 2011 Casey Baxter
+Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
