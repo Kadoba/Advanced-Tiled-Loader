@@ -40,8 +40,8 @@ local filepath
 -- Loads a Map from a tmx file and returns it.
 function Loader.load(filename)
 	
-	filepath = filename
-	filepath = string.gsub(filepath, "[/\\].+$", "") .. "/"
+	filepath = Loader.path .. filename
+	filepath = string.gsub(filepath, "[/\\][^/^\\]+$", "") .. "/"
 	
 	-- Read the file and parse it into a table
 	local t = love.filesystem.read(Loader.path .. filename)
@@ -50,12 +50,12 @@ function Loader.load(filename)
 	-- Get the map and process it
 	for _, v in pairs(t) do
 		if v.label == "map" then
-			return Loader._processMap(filename, v)
+			return Loader._processMap(Loader.path .. filename, v)
 		end
 	end
 	
 	-- If we made this this far then there wasn't a map tag
-	error("Loader.load - No map found in file " .. filename)
+	error("Loader.load - No map found in file " .. Loader.path ..  filename)
 end
 
 ----------------------------------------------------------------------------------------------------
