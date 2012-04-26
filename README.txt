@@ -1,41 +1,43 @@
-
 Advanced Tiled Loader by Kadoba (Casey Baxter)
 
 --------------------------------------------------------------------------------------
 
 CHANGES:
 0.10.2 (04/26/12)
-- Relative paths now fully work. Before, ATL did not to travel backwards in a directory from a 
-	map file to reach a tileset.
+- Relative paths now fully work. Before, ATL did not to travel backwards in a 
+	directory from a map file to reach a tileset.
 
 0.10.1 (04/20/12)
 - Added quit compatibility for love 0.8.0 in the example files
 - AdvTiledLoader can now be correctly required from any subfolder
 - Fixed a bug with map.drawObjects not working
 - Undefined object colors will now appear grey instead of black
-- Added Loader.drawObjects and Loader.useSpriteBatch values. These values will be applied to any 
-	new map that is loaded.
-- Fixed a bug where the map would be drawn incorrectly if the map's width and height were different
+- Added Loader.drawObjects and Loader.useSpriteBatch values. These values will be 
+	applied to any new map that is loaded.
+- Fixed a bug where the map would be drawn incorrectly if the map's width and height 
+	were different
 
 0.10.0 (04/11/12)
 - 2d arrays are replaced with a much easier to use grid class.
-- Tiles are now directly inserted into TileLayer.tileData. You no longer have to look them up via 
-	their ID in Map.tiles.
+- Tiles are now directly inserted into TileLayer.tileData. You no longer have to 
+	look them up via their ID in Map.tiles.
 - Tile indexes are now the same as their coordinants as shown inside the Tiled.
-- Added support for Tiled version 0.8.0. This includes tile rotation, polygon objects,
-	polyline objects, tilemap offset, and tilemap propterties.
+- Added support for Tiled version 0.8.0. This includes tile rotation, polygon 
+	objects, polyline objects, tilemap offset, and tilemap propterties.
 - Moved the object drawing code from object layers to the objects themselves.
-- Added functions tileCopy(), tilePaste(), tileRotate(), tileFlipX(), tileFlipY() to TileLayers.
+- Added functions tileCopy(), tilePaste(), tileRotate(), tileFlipX(), tileFlipY() 
+	to TileLayers.
 
 0.9.0 (8/22/11)
 - Advanced Tile Loader now has a wiki page and a github repository!
 - Cleaned up the code quite a bit.
-- Classes are now broken up into individual files rather than grouping similar ones into one file.
-- Many identifiers have been changed to be less confusing and more consistent. Now camelCase is 
-	used to separate words instead of underscores. Internal functions and data are now prefixed 
-	with an underscore.
-- Sprite batch mode can now be set through the map or through individual tile layers. Tile layer 
-	settings take precedence.
+- Classes are now broken up into individual files rather than grouping similar 
+	ones into one file.
+- Many identifiers have been changed to be less confusing and more consistent. Now 
+	camelCase is used to separate words instead of underscores. Internal 
+	functions and data are now prefixed with an underscore.
+- Sprite batch mode can now be set through the map or through individual tile 
+	layers. Tile layer settings take precedence.
 - A bug with layer transparency has been fixed.
 - Tile:draw() now accepts parameters for scaling, rotation, and offset.
 - TileLayer:drawAfterTile() now works with multiple functions
@@ -44,17 +46,23 @@ CHANGES:
 
 0.8.2 (5/9/11):
 - Tileset images are now cached between maps.
-- Added an option to automatically pad images for PO2. To do this set Loader.fix_po2 to true.
-- Changed Map.tl and Map.ol back to their old names. Map.tl and Map.ol remain as aliases.
-- Tile layers can now render using sprite batches by setting TileLayer.use_batch to true.
+- Added an option to automatically pad images for PO2. To do this set 
+	Loader.fix_po2 to true.
+- Changed Map.tl and Map.ol back to their old names. Map.tl and Map.ol remain as 
+	aliases.
+- Tile layers can now render using sprite batches by setting TileLayer.use_batch 
+	to true.
 - Added an init.lua file.
-- Removed hardcoded require() paths. Added in global TILED_LOADER_PATH to point to the library path.
-- Renamed the TileSet functions getWidth() and getHeight() to tilesWide() and tilesHigh().
+- Removed hardcoded require() paths. Added in global TILED_LOADER_PATH to point 
+	to the library path.
+- Renamed the TileSet functions getWidth() and getHeight() to tilesWide() and 
+	tilesHigh().
 
 0.8.1 (3/10/11):
 - Renamed Map.tilelayers and Map.objectlayers to Map.tl and Map.ol respectively.
 - Added function Tile.drawAfterTile()
-- You may now define a draw() function for objects which overrides the default drawing routine
+- You may now define a draw() function for objects which overrides the default 
+	drawing routine
 
 0.8.0 (2/28/11):
 - Initial release
