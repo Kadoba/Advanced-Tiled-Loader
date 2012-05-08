@@ -1,8 +1,19 @@
 -- XML parser from http://lua-users.org/wiki/LuaXml
 
+local escaped = {
+  ['&quot;'] = '"',
+  ['&amp;'] = '&',
+  ['&apos;'] = "'",
+  ['&lt;'] = '<',
+  ['&gt;'] = '>'
+}
+
 local function parseargs(s)
   local arg = {}
   string.gsub(s, "(%w+)=([\"'])(.-)%2", function (w, _, a)
+    for f, t in pairs(escaped) do
+      a = string.gsub(a, f, t)
+    end
     arg[w] = a
   end)
   return arg
