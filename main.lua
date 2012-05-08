@@ -23,11 +23,11 @@ if example[num].reset then example[num].reset() end
 -- Scroll in and out
 function love.mousepressed( x, y, mb )
 	if mb == "wu" then
-		global.scale = global.scale + 0.2
+		global.scale = global.scale + 0.1
 	end
 
 	if mb == "wd" then
-		global.scale = global.scale - 0.2
+		global.scale = global.scale - 0.1
 	end
 end
 
@@ -55,7 +55,7 @@ end
 function love.keypressed(k)
 	-- quit
     if k == 'escape' then
-        love.event.push('q')
+        (love.event.push or love.event.quit)('q')
     end
 	
 	-- previous map

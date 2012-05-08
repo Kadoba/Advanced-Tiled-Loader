@@ -3,6 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 
 -- Setup
+TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Tt]ile[Ss]et", "") .. '.'
 local ceil = math.ceil
 local Tile = require( TILED_LOADER_PATH .. "Tile")
 local TileSet = {}

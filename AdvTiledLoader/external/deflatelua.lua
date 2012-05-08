@@ -35,7 +35,7 @@ local string_char = string.char
 local io_open = io.open
 local _G = _G
 
-local crc32 = require( TILED_LOADER_PATH .. "external/crc32lua" ) . crc32_byte
+local crc32 = require( TILED_LOADER_PATH .. "external.crc32lua" ) . crc32_byte
 
 local DEBUG = false
 

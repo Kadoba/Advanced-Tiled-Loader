@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 
 -- Define path so lua knows where to look for files.
-TILED_LOADER_PATH = TILED_LOADER_PATH or "AdvTiledLoader/"
+TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Ll]oader$", "") .. '.'
 
 -- A cache to store tileset images so we don't load them multiple times. Filepaths are keys.
 local cache = setmetatable({}, {__mode = "v"})
@@ -29,26 +29,44 @@ local ObjectLayer = require(TILED_LOADER_PATH .. "ObjectLayer")
 local Loader = {
 	path = "", 				-- The path to tmx files.
 	fixPO2 = false, 	    -- If true, pads the images to the power of 2.
-	filterMin = "nearest",	-- The min filter for image:setFilter()
-	filterMag = "nearest",  -- The mag filter for image:setFilter()
+	filterMin = "nearest",	-- The default min filter for image:setFilter()
+	filterMag = "nearest",  -- The default mag filter for image:setFilter()
+	useSpriteBatch = false,	-- The default setting for map.useSpriteBatch
+	drawObjects = true,		-- The default setting for map.drawObjects
 }
 
+local filename -- The name of the tmx file
+local fullpath -- The full path to the tmx file minus the name
+
 -- Loads a Map from a tmx file and returns it.
-function Loader.load(filename)
+function Loader.load(tofile)
+	
+	-- Get the raw path
+	fullpath = Loader.path .. tofile
+	
+	-- Process directory up
+	while string.find(fullpath, "[/\\][^/^\\]+[/\\]%.%.[/\\]") do
+		fullpath = string.gsub(fullpath, "[/\\][^/^\\]+[/\\]%.%.[/\\]", "/", 1)
+	end
+	
+	-- Get the file name
+	filename = string.match(fullpath, "[^/^\\]+$")
+	-- Get the path to the file
+	fullpath = string.gsub(fullpath, "[^/^\\]+$", "")
 	
 	-- Read the file and parse it into a table
-	local t = love.filesystem.read(Loader.path .. filename)
+	local t = love.filesystem.read(fullpath .. filename)
 	t = xml_to_table(t)
 	
 	-- Get the map and process it
 	for _, v in pairs(t) do
 		if v.label == "map" then
-			return Loader._processMap(filename, v)
+			return Loader._processMap(fullpath .. filename, v)
 		end
 	end
 	
 	-- If we made this this far then there wasn't a map tag
-	error("Loader.load - No map found in file " .. filename)
+	error("Loader.load - No map found in file " .. fullpath .. filename)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -60,10 +78,12 @@ end
 function Loader._newImage(info)
 	local source, padded, image
 	
+	-- If the image information is image data then assign it as the source
 	if info:type() == "ImageData" then  
 		source = info
+	-- Otherwise turn it into image data first
 	else
-		source = love.image._newImageData(info)
+		source = love.image.newImageData(info)
 	end
 
     local w, h = source:getWidth(), source:getHeight()
@@ -145,6 +165,10 @@ function Loader._processMap(name, t)
 						tonumber(t.xarg.tilewidth), tonumber(t.xarg.tileheight), 
 						t.xarg.orientation)
 							
+	-- Apply the loader settings
+	map.useSpriteBatch = Loader.useSpriteBatch
+	map.drawObjects = Loader.drawObjects
+	
 	-- Now we fill it with the content
 	for _, v in ipairs(t) do
 		
@@ -208,7 +232,11 @@ function Loader._processTileSet(t, map)
 	for _, v in ipairs(t) do
 		-- Process image
 		if v.label == "image" then 
-			path = Loader.path .. v.xarg.source
+			path = fullpath .. v.xarg.source
+			-- Process directory up
+			while string.find(path, "[^/^\\]+[/\\]%.%.[/\\]") do
+				path = string.gsub(path, "[^/^\\]+[/\\]%.%.[/\\]", "", 1)
+			end
 			-- If the image is in the cache then load it
 			if cache[path] then
 				image = cache[path]
@@ -216,7 +244,7 @@ function Loader._processTileSet(t, map)
 				imageHeight = cache_imagesize[image].height
 			-- Else load it and store in the cache
 			else
-				image = love.image.newImageData(Loader.path .. v.xarg.source) 
+				image = love.image.newImageData(path) 
 				-- transparent color
 				if v.xarg.trans then
 					local trans = { tonumber( "0x" .. v.xarg.trans:sub(1,2) ), 

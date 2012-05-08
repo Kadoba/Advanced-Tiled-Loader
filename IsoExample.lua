@@ -1,5 +1,6 @@
+
 -- Setup
-local loader = require("AdvTiledLoader/Loader")
+local loader = require("AdvTiledLoader.Loader")
 loader.path = "maps/"
 local map = loader.load("isometric.tmx")
 local layer = map.tl.Ground

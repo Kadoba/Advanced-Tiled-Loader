@@ -30,9 +30,9 @@ local debug = require "debug"
 local debug_traceback = debug.traceback
 local _G = _G
 
-local DEFLATE = require( TILED_LOADER_PATH .. "external/deflatelua" )
+local DEFLATE = require( TILED_LOADER_PATH .. "external.deflatelua" )
 
-local OptionParser = require( TILED_LOADER_PATH .. "external/optparse" ) . OptionParser
+local OptionParser = require( TILED_LOADER_PATH .. "external.optparse" ) . OptionParser
 
 local version = '0.1'
 
