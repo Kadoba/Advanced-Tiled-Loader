@@ -103,8 +103,9 @@ function TileLayer:draw()
 				-- Get the flipped tiles
 				if self._flippedTiles(x,y) then
 					rot =  (self._flippedTiles(x,y) % 2) == 1 and true or false
-					flipY = (self._flippedTiles(x,y) / 4) >= 2 and -1 or 1
+					flipY = (self._flippedTiles(x,y) % 4) >= 2 and -1 or 1
 					flipX = self._flippedTiles(x,y) >= 4 and -1 or 1
+					if rot then flipX, flipY = -flipY, flipX end
 				else
 					rot, flipX, flipY = false, 1, 1
 				end
