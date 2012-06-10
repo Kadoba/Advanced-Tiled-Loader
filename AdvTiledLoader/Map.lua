@@ -225,7 +225,7 @@ function Map:_updateTileRange()
 		
 		else
 			-- If the drawing range isn't defined then we draw all the tiles
-			x1, y1, x2, y2 = 1, 1, self.width, self.height
+			x1, y1, x2, y2 = 0, 0, self.width, self.height
 		end
 		
 	-- Calculate the _tileRange for isometric tiles.
