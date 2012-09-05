@@ -12,6 +12,7 @@ Supported features include:
 * zlib/gzip compression
 * Isometric maps
 * Flipped and rotated tiles
+
 ----------------------------------------------------------------------------------------------------
 # Quick Example
   
