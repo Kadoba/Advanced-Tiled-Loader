@@ -1,6 +1,6 @@
 #Advanced Tiled Loader
 ========
-Advanced Tiled Loader (ATL) loads and renders [Tiled](http://www.mapeditor.org/) maps inside of the [Löve2D](http://love2d.org)game framework.
+Advanced Tiled Loader (ATL) loads and renders [Tiled](http://www.mapeditor.org/) maps inside of the [Löve2D](http://love2d.org) game framework.
 
 Supported features include:
 * Multiple Layers
