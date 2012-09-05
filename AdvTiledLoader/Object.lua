@@ -1,16 +1,17 @@
 ---------------------------------------------------------------------------------------------------
 -- -= Object =-
 ---------------------------------------------------------------------------------------------------
-
 -- Setup
-local Object = {}
+local Object = {class = "Object"}
 Object.__index = Object
+
+---------------------------------------------------------------------------------------------------
 
 -- Returns a new Object
 function Object:new(layer, name, type, x, y, width, height, gid, prop)
 
 	-- Public:
-	local obj = {}
+	local obj = setmetatable({}, Object)
 	obj.layer = layer			-- The layer that the object belongs to
 	obj.name = name or ""		-- Name of the object
 	obj.type = type or ""		-- Type of the object
@@ -49,9 +50,10 @@ function Object:new(layer, name, type, x, y, width, height, gid, prop)
 	Object.updateDrawInfo(obj)
 	
 	-- Return our object
-	return setmetatable(obj, Object)
+	return obj
 end
 
+---------------------------------------------------------------------------------------------------
 -- Updates the draw information. Call this every time the object moves or changes size.
 function Object:updateDrawInfo()
 	local di = self.drawInfo
@@ -132,27 +134,7 @@ function Object:updateDrawInfo()
 	end
 end
 
--- Moves the object to the relative location
-function Object:move(x,y)
-	self.x = self.x + x
-	self.y = self.y + y
-	self:updateDrawInfo()
-end
-
--- Moves the object to the absolute location
-function Object:moveTo(x,y)
-	self.x = x
-	self.y = y
-	self:updateDrawInfo()
-end
-
--- Resizes the object
-function Object:resize(w,h)
-	self.width = w or self.width
-	self.height = h or self.height
-	self.updateDrawInfo()
-end
-
+---------------------------------------------------------------------------------------------------
 -- Draw the object. The passed color is the color of the object layer the object belongs to.
 function Object:draw(x, y, r, g, b, a)
 	
@@ -216,11 +198,12 @@ function Object:draw(x, y, r, g, b, a)
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Returns the Object class
 return Object
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

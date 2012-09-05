@@ -1,6 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 -- -= Map =-
 ---------------------------------------------------------------------------------------------------
+-- Setup
 
 -- Import the other classes
 TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Mm]ap$", "") .. '.'
@@ -9,7 +10,6 @@ local TileSet = require( TILED_LOADER_PATH .. "TileSet")
 local TileLayer = require( TILED_LOADER_PATH .. "TileLayer")
 local Object = require( TILED_LOADER_PATH .. "Object")
 local ObjectLayer = require( TILED_LOADER_PATH .. "ObjectLayer")
-
 
 -- Localize some functions so they are faster
 local pairs = pairs
@@ -21,14 +21,15 @@ local ceil = math.ceil
 local floor = math.floor
 
 -- Make our map class
-local Map = {}
+local Map = {class = "Map"}
 Map.__index = Map
 
+---------------------------------------------------------------------------------------------------
 -- Returns a new map
 function Map:new(name, width, height, tileWidth, tileHeight, orientation, properties)
 
 	-- Our map
-	local map = {}
+	local map = setmetatable({}, Map)
 	
 	-- Public:
 	map.name = name or "Unnamed Nap"				-- Name of the map
@@ -38,37 +39,32 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, proper
 	map.tileHeight = tileHeight or 0				-- Height in pixels of each tile
 	map.orientation = orientation or "orthogonal"	-- Type of map. "orthogonal" or "isometric"
 	map.properties = properties or {}				-- Properties of the map set by Tiled
-	map.useSpriteBatch = false						-- If true then tile layers are rendered with sprite batches.
+	map.useSpriteBatch = true						-- If true then TileLayers use sprite batches.
 	
-	map.offsetX = 0					-- X offset the map
-	map.offsetY = 0					-- Y offset of the map
-	
-	map.tileLayers = {}				-- Tile layers indexed by name
-	map.objectLayers = {}			-- Object layers indexed by name
+	map.layers  = {}				-- Layers of the map indexed by name
 	map.tilesets = {}				-- Tilesets indexed by name
 	map.tiles = {}					-- Tiles indexed by id
 	
-	map.tl = map.tileLayers			-- A shortcut to tileLayers
-	map.ol = map.objectLayers		-- A shortcut to objectLayers
-	
-	map.drawList = {}				-- Draws the items in order from 1 to n.				
-	map.drawRange = {}				-- Limits the drawing of tiles and objects. [1]:x [2]:y [3]:width [4]:height
+	map.layerOrder = {}				-- The order of the layers. Callbacks are called in this order.				
 	map.drawObjects = true			-- If true then object layers will be drawn
+	map.drawRange = {}				-- Limits the drawing of tiles and objects. 
+									-- [1]:x [2]:y [3]:width [4]:height
 	
 	-- Private:
 	map._widestTile = 0				-- The widest tile on the map.
 	map._highestTile = 0			-- The tallest tile on the map.
 	map._tileRange = {}				-- The range of drawn tiles. [1]:x [2]:y [3]:width [4]:height
 	map._previousTileRange = {}		-- The previous _tileRange. If this changed then we redraw sprite batches.
-	map._specialRedraw = true		-- If true then the map needs to redraw sprite batches.
-	map._forceSpecialRedraw = false	-- If true then the next special redraw is forced
-	map._previousUseSpriteBatch = false   -- The previous _useSpiteBatch. If this changed then we redraw sprite batches.
+	map._redraw = true				-- If true then the map needs to redraw sprite batches.
+	map._forceRedraw = false		-- If true then the next redraw is forced
+	map._previousUseSpriteBatch = false   -- The previous useSpiteBatch. If this changed then we redraw sprite batches.
 	map._tileClipboard	=	nil		-- The value that stored for TileLayer:tileCopy() and TileLayer:tilePaste()
 	
 	-- Return the new map
-	return setmetatable(map, Map)
+	return map
 end
 
+---------------------------------------------------------------------------------------------------
 -- Creates a new tileset and adds it to the map. The map will then auto-update its tiles.
 function Map:newTileSet(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop)
 	assert(name, "Map:newTileSet - The name parameter is invalid")
@@ -77,103 +73,121 @@ function Map:newTileSet(img, name, tilew, tileh, width, height, firstgid, space,
 	return self.tilesets[name]
 end
 
--- Creates a new TileLayer and adds it to the map. The last parameter is the place in the draw order
--- If draw isn't specified, it will be created as the highest drawable.
-function Map:newTileLayer(name, opacity, prop, draw)
-	assert(name, "Map:newTileLayer - The name parameter is invalid")
-	self.tl[name] = TileLayer:new(self, name, opacity, prop)
-	table.insert(self.drawList, draw or #self.drawList + 1, self.tl[name])
-	return self.tl[name]
+---------------------------------------------------------------------------------------------------
+-- Creates a new TileLayer and adds it to the map. The position parameter is the position to insert
+-- the layer into the layerOrder.
+function Map:newTileLayer(name, opacity, properties, position)
+	if self.layers[name] then 
+		error( string.format("Map:newTileLayer - The layer name \"%s\" already exists.", name) )
+	end
+	self.layers[name] = TileLayer:new(self, name, opacity, properties)
+	table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
+	return self.layers[name]
 end
 
+---------------------------------------------------------------------------------------------------
 -- Creates a new ObjectLayer and inserts it into the map
-function Map:newObjectLayer(name, color, opacity, prop, draw)
-	assert(name, "Map:newObjectLayer - The name parameter is invalid")
-	self.ol[name] = ObjectLayer:new(self, name, color, opacity, prop)
-	table.insert(self.drawList, draw or #self.drawList + 1, self.tl[name])
-	return self.ol[name]
+function Map:newObjectLayer(name, color, opacity, properties, position)
+	if self.layers[name] then 
+		error( string.format("Map:newObjectLayer - The layer name \"%s\" already exists.", name) )
+	end
+	self.layers[name] = ObjectLayer:new(self, name, color, opacity, properties)
+	table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
+	return self.layers[name]
 end
 
+---------------------------------------------------------------------------------------------------
+-- Add a custom layer to the map. You can include a predefined layer table or one will be created.
+function Map:newCustomLayer(name, position, layer)
+	if self.layers[name] then 
+		error( string.format("Map:newCustomLayer - The layer name \"%s\" already exists.", name) )
+	end
+	self.layers[name] = layer or {name=name}
+	table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
+	return self.layers[name]
+end
+
+---------------------------------------------------------------------------------------------------
 -- Cuts tiles out of tilesets and stores them in the tiles tables under their id
 -- Call this after the tilesets are set up
 function Map:updateTiles()
 	self.tiles = {}
-	self.widestTile = 0
-	self.highestTile = 0
+	self._widestTile = 0
+	self._highestTile = 0
 	for _, ts in pairs(self.tilesets) do
-		if ts.tileWidth > self.widestTile then self.widestTile = ts.tileWidth end
-		if ts.tileHeight > self.highestTile then self.highestTile = ts.tileHeight end
+		if ts.tileWidth > self._widestTile then self._widestTile = ts.tileWidth end
+		if ts.tileHeight > self._highestTile then self._highestTile = ts.tileHeight end
 		for id, val in pairs(ts:getTiles()) do
 			self.tiles[id] = val
 		end
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Forces the map to redraw the sprite batches.
 function Map:forceRedraw()
-	self._specialRedraw = true
-	self._forceSpecialRedraw = true
+	self._redraw = true
+	self._forceRedraw = true
 end
 
--- Draws each item in drawList. By default, drawList is simply an array of all the layers'
--- draw functions in the order they appear in Tiled. You can manipulate drawList however you like.
--- Items in drawList can either be functions or tables with a draw() function.
+---------------------------------------------------------------------------------------------------
+-- Performs a callback on all map layers.
+local layer
+function Map:callback(cb, ...)
+	if cb == "draw" then self:_updateTileRange() end
+	for i = 1, #self.layerOrder do
+		layer = self.layerOrder[i]
+		if layer[cb] then layer[cb](layer, ...) end
+	end
+end
+
+---------------------------------------------------------------------------------------------------
+-- Draw the map.
 function Map:draw()
-	
-	-- Update the tile range
-	self:_updateTileRange()
-	
-	-- This actually draws the map
-	local vtype
-	for i,v in ipairs(self.drawList) do
-		vtype = type(v)
-		if vtype == "table"  then 
-			assert(v.draw, "Map:draw() - A table in drawList does not have a draw() function")
-			v:draw()
-		elseif vtype == "function" then 
-			v()
-		end
-	end
-
+	self:callback("draw")
 end
 
--- Returns the draw position of the item contained in drawList.
-function Map:drawPosition(item)
-	local pos
-	for k, v in ipairs(self.drawList) do
-		if v == item then pos = k end
+---------------------------------------------------------------------------------------------------
+-- Returns the position of the layer inside the map's layerOrder
+function Map:layerPosition(layer)
+	for i = 1,#self.layerOrder do
+		if self.layerOrder[i] == layer then return i end
 	end
-	return pos
 end
 
+---------------------------------------------------------------------------------------------------
 -- Turns an isometric location into a world location. The unit length for isometric tiles is always
 -- the map's tileHeight. This is both for width and height.
+local h, tw, th
 function Map:fromIso(x, y)
-	x, y = x or 0, y or 0
-	local h, tw, th = self.height, self.tileWidth, self.tileHeight
+	h, tw, th = self.height, self.tileWidth, self.tileHeight
 	return ((x-y)/th + h - 1)*tw/2, (x+y)/2
 end
 
+---------------------------------------------------------------------------------------------------
 -- Turns a world location into an isometric location
+local ix, iy
 function Map:toIso(a, b)
 	a, b = a or 0, b or 0
-	local h, tw, th = self.height, self.tileWidth, self.tileHeight
-	local x, y
-	x = b - (h-1)*th/2 + (a*th)/tw 
-	y = 2*b - x
-	return x, y
+	h, tw, th = self.height, self.tileWidth, self.tileHeight
+	ix = b - (h-1)*th/2 + (a*th)/tw 
+	iy = 2*b - ix
+	return ix, iy
 end
 
+---------------------------------------------------------------------------------------------------
 -- Sets the draw range
 function Map:setDrawRange(x,y,w,h)
 	self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4] = x, y, w, h
 end
 
+---------------------------------------------------------------------------------------------------
 -- Gets the draw range
 function Map:getDrawRange()
 	return self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4]
 end
 
+---------------------------------------------------------------------------------------------------
 -- Automatically sets the draw range to fit the display
 function Map:autoDrawRange(tx, ty, scale, pad)
 	tx, ty, scale, pad = tx or 0, ty or 0, scale or 1, pad or 0
@@ -183,28 +197,23 @@ function Map:autoDrawRange(tx, ty, scale, pad)
 	end
 end
 
--- A short-hand to retreive tiles from a layer's tileData.
-function Map:__call(layerName, x, y)
-	return self.tileLayers.tileData(x,y)
-end
-
 ----------------------------------------------------------------------------------------------------
 -- Private Functions
 ----------------------------------------------------------------------------------------------------
-
 -- This is an internal function used to update the map's _tileRange, _previousTileRange, and 
 -- _specialRedraw
+local x1, y1, x2, y2, highOffset, widthOffset, tr, ptr
 function Map:_updateTileRange()
 	
 	-- Offset to make sure we can always draw the highest and widest tile
-	local heightOffset = self.highestTile - self.tileHeight
-	local widthOffset = self.widestTile - self.tileWidth
+	heightOffset = self._highestTile - self.tileHeight
+	widthOffset = self._widestTile - self.tileWidth
 	
 	-- Set the previous tile range
 	for i=1,4 do self._previousTileRange[i] = self._tileRange[i] end
 	
 	-- Get the draw range. We will replace these values with the tile range.
-	local x1, y1, x2, y2 = self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4]
+	x1, y1, x2, y2 = self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4]
 	
 	-- Calculate the _tileRange for orthogonal tiles
 	if self.orientation == "orthogonal" then
@@ -212,46 +221,46 @@ function Map:_updateTileRange()
 		-- Limit the drawing range. We must make sure we can draw the tiles that are bigger
 		-- than the self's tileWidth and tileHeight.
 		if x1 and y1 and x2 and y2 then
-			x2 = ceil((x1+x2)/self.tileWidth)
-			y2 = ceil((y1+y2+heightOffset)/self.tileHeight)
+			x2 = ceil(x2/self.tileWidth)
+			y2 = ceil((y2+heightOffset)/self.tileHeight)
 			x1 = floor((x1-widthOffset)/self.tileWidth)
 			y1 = floor(y1/self.tileHeight)
 		
 			-- Make sure that we stay within the boundry of the map
 			x1 = x1 > 0 and x1 or 0
 			y1 = y1 > 0 and y1 or 0
-			x2 = x2 < self.width-1 and x2 or self.width-1
-			y2 = y2 < self.height-1 and y2 or self.height-1
+			x2 = x2 < self.width and x2 or self.width - 1
+			y2 = y2 < self.height and y2 or self.height - 1
 		
 		else
 			-- If the drawing range isn't defined then we draw all the tiles
-			x1, y1, x2, y2 = 0, 0, self.width, self.height
+			x1, y1, x2, y2 = 0, 0, self.width-1, self.height-1
 		end
 		
 	-- Calculate the _tileRange for isometric tiles.
 	else
 		-- If the drawRange is set
 		if x1 and y1 and x2 and y2 then
-			x1, y1 = self:toIso(x1-self.widestTile,y1)
+			x1, y1 = self:toIso(x1-self._widestTile,y1)
 			x1, y1 = ceil(x1/self.tileHeight), ceil(y1/self.tileHeight)-1
-			x2 = ceil((x2+self.widestTile)/self.tileWidth)
+			x2 = ceil((x2+self._widestTile)/self.tileWidth)
 			y2 = ceil((y2+heightOffset)/self.tileHeight)
 		-- else draw everything
 		else
 			x1 = 0
 			y1 = 0
-			x2 = self.width-1
-			y2 = self.height-1
+			x2 = self.width - 1
+			y2 = self.height - 1
 		end
 	end
 	
 	-- Assign the new values to the tile range
-	local tr, ptr = self._tileRange, self._previousTileRange
+	tr, ptr = self._tileRange, self._previousTileRange
 	tr[1], tr[2], tr[3], tr[4] = x1, y1, x2, y2
 	
-	-- If the tile range or useSpriteBatch is different than the last frame then we need to update sprite batches.
-	self._specialRedraw = self.useSpriteBatch ~= self._previousUseSpriteBatch or
-						  self._forceSpecialRedraw or
+	-- If the tile range or useSpriteBatch is different than the last frame then we need to 
+	-- update sprite batches.
+	self._redraw = self.useSpriteBatch ~= self._previousUseSpriteBatch or self._forceRedraw or
 						  tr[1] ~= ptr[1] or 
 						  tr[2] ~= ptr[2] or 
 						  tr[3] ~= ptr[3] or 
@@ -261,14 +270,21 @@ function Map:_updateTileRange()
 	self._previousUseSpriteBatch = self.useSpriteBatch
 						  
 	-- Reset the forced special redraw
-	self._forceSpecialRedraw = false
+	self._forceRedraw = false
 end
 
+---------------------------------------------------------------------------------------------------
+-- Calling the map as a function will return the layer
+function Map:__call(layerName)
+	return self.layers[layerName]
+end
+
+---------------------------------------------------------------------------------------------------
 -- Returns the Map class
 return Map
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

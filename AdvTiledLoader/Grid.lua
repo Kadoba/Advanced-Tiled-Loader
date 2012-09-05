@@ -1,76 +1,54 @@
 ---------------------------------------------------------------------------------------------------
 -- -= Grid =-
 ---------------------------------------------------------------------------------------------------
-
-local Grid = {}
+local Grid = {class = "Grid"}
 Grid.__index = Grid 
 
+---------------------------------------------------------------------------------------------------
 -- Creates and returns a new grid
 function Grid:new()
 	local grid = {}
 	grid.cells = {}
-	grid.cells.mt = {__mode = ""}
 	return setmetatable(grid, Grid)
 end
 
--- Weakens the grid's cells so the garbage collecter can delete their contents if they have no
--- other references.
-function Grid:weaken()
-	self.cells.mt.__mode = "v"
-	for key,row in pairs(self.cells) do
-		setmetatable(row,self.cells.mt)
-	end
-end
-
--- Unweakens the grid
-function Grid:unweaken()
-	self.cells.mt.__mode = ""
-	for key,row in pairs(self.cells) do
-		setmetatable(row,self.cells.mt)
-	end
-end
-
+---------------------------------------------------------------------------------------------------
 -- Gets the value of a single cell
 function Grid:get(x,y)
-	return self.cells[x] and self.cells[x][y] or nil
+	return self.cells[x] and self.cells[x][y]
 end
 
+---------------------------------------------------------------------------------------------------
 -- Sets the value of a single cell
 function Grid:set(x,y,value)
-	if not self.cells[x] then 
-		self.cells[x] = setmetatable({}, self.cells.mt)
-	end
+	if not self.cells[x] then self.cells[x] = {} end
 	self.cells[x][y] = value
 end
 
--- Sets all of the cells in an area to the same value
-function Grid:setArea(startX, startY, endX, endY, value)
-	for x = startX,endX do
-		for y = startY,endY do
-			self:set(x,y,value)
-		end
-	end
-end
-
+---------------------------------------------------------------------------------------------------
 -- Iterate over all values
+local x, y, row, val
 function Grid:iterate()
-	local x, row = next(self.cells)
-	local y, val
+	x, y, row, val = nil, nil, nil, nil
 	return function()
 		repeat
-			y,val = next(row,y)
-			if y == nil then x,row = next(self.cells, x) end
-		until (val and x and y and type(x)=="number") or (not val and not x and not y)
-		return x,y,val
+			if not y then 
+				x, row = next(self.cells, x) 
+				if not row then return end
+			end
+			y, val = next(row, y) 
+		until y
+		return x, y, val
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Iterate over a rectangle shape
-function Grid:rectangle(startX, startY, endX, endY, includeNil)
+function Grid:rectangle(startX, startY, width, height, includeNil)
 	local x, y = startX, startY
 	return function()
-		while y <= endY do
-			while x <=endX do
+		while y <= startY + height do
+			while x <= startX + width do
 				x = x+1
 				if self(x-1,y) ~= nil or includeNil then 
 					return x-1, y, self(x-1,y)
@@ -83,6 +61,7 @@ function Grid:rectangle(startX, startY, endX, endY, includeNil)
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Iterate over a line. Set noDiag to true to keep from traversing diagonally.
 function Grid:line(startX, startY, endX, endY, noDiag, includeNil)	
     local dx = math.abs(endX - startX)
@@ -127,6 +106,7 @@ function Grid:line(startX, startY, endX, endY, noDiag, includeNil)
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Iterates over a circle of cells
 function Grid:circle(cx, cy, r, includeNil)
 	local x,y
@@ -144,6 +124,7 @@ function Grid:circle(cx, cy, r, includeNil)
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Cleans the grid of empty rows. 
 function Grid:clean()
 	for key,row in pairs(self.cells) do
@@ -151,14 +132,22 @@ function Grid:clean()
 	end
 end
 
+---------------------------------------------------------------------------------------------------
+-- Clears the grid
+function Grid:clear()
+	self.cells = {}
+end
+
+---------------------------------------------------------------------------------------------------
 -- This makes calling the grid as a function act like Grid.get.
 Grid.__call = Grid.get
 
+---------------------------------------------------------------------------------------------------
 -- Returns the grid class
 return Grid
 
 --------------------------------------------------------------------------------------
--- Copyright (c) 2011 Casey Baxter
+-- Copyright (c) 2011-2012 Casey Baxter
 
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
 -- of this software and associated documentation files (the "Software"), to deal

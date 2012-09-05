@@ -1,102 +1,79 @@
-Advanced Tiled Loader by Kadoba (Casey Baxter)
+#Advanced Tiled Loader
+========
+Advanced Tiled Loader (ATL) loads and renders (Tiled)[http://www.mapeditor.org/] maps inside of the (LÖVE)[https://love2d.org/] game framework.
 
---------------------------------------------------------------------------------------
+Supported features include:
+* Multiple Layers
+* All object types (regular, polygon, and tile)
+* Properties
+* Transparent colors
+* Margins and spacing
+* External tilesets
+* zlib/gzip compression
+* Isometric maps
+* Flipped and rotated tiles[/list]
 
-CHANGES:
-0.10.2 (04/26/12)
-- Relative paths now fully work. Before, ATL did not like to travel backwards in 
-	a directory from a map file to reach a tileset.
+----------------------------------------------------------------------------------------------------
+# Quick Example
+  
+```lua     
 
-0.10.1 (04/20/12)
-- Added quit compatibility for love 0.8.0 in the example files
-- AdvTiledLoader can now be correctly required from any subfolder
-- Fixed a bug with map.drawObjects not working
-- Undefined object colors will now appear grey instead of black
-- Added Loader.drawObjects and Loader.useSpriteBatch values. These values will be 
-	applied to any new map that is loaded.
-- Fixed a bug where the map would be drawn incorrectly if the map's width and height 
-	were different
+-- Gets the loader
+loader = require("AdvTiledLoader/loader.lua")
 
-0.10.0 (04/11/12)
-- 2d arrays are replaced with a much easier to use grid class.
-- Tiles are now directly inserted into TileLayer.tileData. You no longer have to 
-	look them up via their ID in Map.tiles.
-- Tile indexes are now the same as their coordinants as shown inside the Tiled.
-- Added support for Tiled version 0.8.0. This includes tile rotation, polygon 
-	objects, polyline objects, tilemap offset, and tilemap propterties.
-- Moved the object drawing code from object layers to the objects themselves.
-- Added functions tileCopy(), tilePaste(), tileRotate(), tileFlipX(), tileFlipY() 
-	to TileLayers.
+ -- Path to the tmx files. The file structure must be similar to how they are saved in Tiled
+loader.path = "maps/"
 
-0.9.0 (8/22/11)
-- Advanced Tile Loader now has a wiki page and a github repository!
-- Cleaned up the code quite a bit.
-- Classes are now broken up into individual files rather than grouping similar 
-	ones into one file.
-- Many identifiers have been changed to be less confusing and more consistent. Now 
-	camelCase is used to separate words instead of underscores. Internal 
-	functions and data are now prefixed with an underscore.
-- Sprite batch mode can now be set through the map or through individual tile 
-	layers. Tile layer settings take precedence.
-- A bug with layer transparency has been fixed.
-- Tile:draw() now accepts parameters for scaling, rotation, and offset.
-- TileLayer:drawAfterTile() now works with multiple functions
-- Forcing a redraw is now automatic when you switch sprite batch modes.
-- Added support for flipped tiles that were introduced in Tiled version 0.7.1
+ -- Loads the map file and returns it
+map = loader.load("desert.tmx")
 
-0.8.2 (5/9/11):
-- Tileset images are now cached between maps.
-- Added an option to automatically pad images for PO2. To do this set 
-	Loader.fix_po2 to true.
-- Changed Map.tl and Map.ol back to their old names. Map.tl and Map.ol remain as 
-	aliases.
-- Tile layers can now render using sprite batches by setting TileLayer.use_batch 
-	to true.
-- Added an init.lua file.
-- Removed hardcoded require() paths. Added in global TILED_LOADER_PATH to point 
-	to the library path.
-- Renamed the TileSet functions getWidth() and getHeight() to tilesWide() and 
-	tilesHigh().
+-- Draws the map
+map:draw()
 
-0.8.1 (3/10/11):
-- Renamed Map.tilelayers and Map.objectlayers to Map.tl and Map.ol respectively.
-- Added function Tile.drawAfterTile()
-- You may now define a draw() function for objects which overrides the default 
-	drawing routine
+-- Limits the drawing range of the map. Important for performance
+map:setDrawRange(0,0,love.graphics.getWidth(), love.graphics.getHeight())
 
-0.8.0 (2/28/11):
-- Initial release
+-- Automatically sets the drawing range to the size of the screen.
+map:autoDrawRange(tx, ty, scale, padding)
 
+-- Accessing individual layers
+map.layers["layer name"]
 
-For more information see here:
-http://love2d.org/forums/viewtopic.php?f=5&t=2567
+-- A shortcut for accessing specific layers
+map("layer name")
 
---------------------------------------------------------------------------------------
+-- Finding a specific tile
+map.layers["layer name"]:get(5,5)
 
+-- A shortcut for finding a specific tile
+map("layer name")(5,5)
 
-All images and code is subject to the following license unless otherwise stated:
+-- Iterating over all tiles in a layer
+for x, y, tile in map("layer name"):iterate() do
+   print( string.format("Tile at (%d,%d) has an id of %d", x, y, tile.id) )
+end
 
+-- Iterating over all objects in a layer
+for i, obj in pairs( map("object layer").objects ) do
+	print( "Hi, my name is " .. obj.name )
+end
 
-Copyright (c) 2011-2012 Casey Baxter
+-- Find all objects of a specific type in all layers
+for _, layer in pairs(map.layers) do
+   if layer.class == "ObjectLayer" then
+		for _, obj in pairs(player.objects) do
+			if obj.type == "enemy" then print(obj.name) end
+		end
+   end
+end
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+-- draw the tile with the id 4 at (100,100)
+map.tiles[4]:draw(100,100)
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+-- Access the tile's properties set by Tiled
+map.tiles[4].properties
 
-Except as contained in this notice, the name(s) of the above copyright holders
-shall not be used in advertising or otherwise to promote the sale, use or
-other dealings in this Software without prior written authorization.
+-- Turns off drawing of non-tiled objects.
+map.drawObjects = false
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+```

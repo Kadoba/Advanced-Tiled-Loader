@@ -8,6 +8,7 @@ local sub = string.sub
 local gsub = string.gsub
 local rem = table.remove
 
+---------------------------------------------------------------------------------------------------
 -- Our base64 value table
 local base64 = { ['A']=0,['B']=1,['C']=2,['D']=3,['E']=4,['F']=5,['G']=6,['H']=7,['I']=8,
 				['J']=9,['K']=10,['L']=11,['M']=12,['N']=13,['O']=14,['P']=15,['Q']=16,
@@ -18,6 +19,7 @@ local base64 = { ['A']=0,['B']=1,['C']=2,['D']=3,['E']=4,['F']=5,['G']=6,['H']=7
 				['x']=49,['y']=50,['z']=51,['0']=52,['1']=53,['2']=54,['3']=55,['4']=56,
 				['5']=57,['6']=58,['7']=59,['8']=60,['9']=61,['+']=62,['/']=63,['=']=nil}
 
+---------------------------------------------------------------------------------------------------
 -- Decimal values for binary digits
 local bin ={}
 local mult = 1
@@ -26,6 +28,7 @@ for i = 1,40 do
 	mult = mult*2
 end
 
+---------------------------------------------------------------------------------------------------
 -- A buffer we will use to process the bits
 local buffer = 0
 local pos = 0
@@ -34,6 +37,7 @@ local function clearBuffer()
 	pos = 1
 end
 
+---------------------------------------------------------------------------------------------------
 -- Shift all of the bits up in the buffer and put the base64 number on the bottom
 local function pushBase64(n)
 	if base64[n] == nil then return end
@@ -41,6 +45,7 @@ local function pushBase64(n)
 	pos = pos + 6
 end
 
+---------------------------------------------------------------------------------------------------
 -- Get an int out of the buffer. This is tricky. The byte order is in little endian so we're going
 -- to have to isolate and cut the bytes out and then move them around.
 local function getInt()
@@ -64,6 +69,7 @@ local function getInt()
 	return  tmp
 end
 
+---------------------------------------------------------------------------------------------------
 -- Get a byte out of the buffer
 local function getByte()
 	-- If our buffer isn't filled all the way then fill it with zeros
@@ -81,14 +87,17 @@ local function getByte()
 	return tmp
 end
 
+---------------------------------------------------------------------------------------------------
 -- Glues together an integer from four bytes. Little endian
 local function glueInt(b1, b2, b3, b4)
 	return b1%bin[9] + b2%bin[9]*bin[9] + b3%bin[9]*bin[17] + b4%bin[9]*bin[25]
 end
 
+---------------------------------------------------------------------------------------------------
 -- A Lua set that will filter out characters that aren't in the base64 table
 local set = "[^%a%d%+%/%=]"
 
+---------------------------------------------------------------------------------------------------
 -- Decodes a base64 string into the given type
 local function decode(mode, raw)
 
@@ -130,11 +139,12 @@ local function decode(mode, raw)
 	return val
 end
 
+---------------------------------------------------------------------------------------------------
 -- Returns the functions
 return {decode = decode, glueInt = glueInt, base64 = base64}
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

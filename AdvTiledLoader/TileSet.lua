@@ -1,14 +1,14 @@
 ---------------------------------------------------------------------------------------------------
 -- -= TileSet =-
 ---------------------------------------------------------------------------------------------------
-
 -- Setup
 TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Tt]ile[Ss]et", "") .. '.'
 local ceil = math.ceil
 local Tile = require( TILED_LOADER_PATH .. "Tile")
-local TileSet = {}
+local TileSet = {class = "TileSet"}
 TileSet.__index = TileSet
 
+----------------------------------------------------------------------------------------------------
 -- Creates a new tileset.
 function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop, prop)
 	assert( img and name and tilew and tileh and width and height and firstgid,
@@ -32,18 +32,21 @@ function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, ma
 	return setmetatable(ts, TileSet)
 end
 
+----------------------------------------------------------------------------------------------------
 -- Returns the width in tiles
 function TileSet:tilesWide()
 	return ceil( (self.width - self.margin*2 - self.spacing) / 
 					  (self.tileWidth + self.spacing) )
 end
 
+----------------------------------------------------------------------------------------------------
 -- Returns the height in tiles
 function TileSet:tilesHigh()
 	return ceil( (self.height - self.margin*2 - self.spacing) / 
 					  (self.tileHeight + self.spacing) )
 end
 
+----------------------------------------------------------------------------------------------------
 -- Produces tiles from the settings and returns them in a table indexed by their id.
 -- These are cut out left-to-right, top-to-bottom.
 function TileSet:getTiles()
@@ -67,11 +70,12 @@ function TileSet:getTiles()
 	return tiles
 end
 
+----------------------------------------------------------------------------------------------------
 -- Return the TileSet class
 return TileSet
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

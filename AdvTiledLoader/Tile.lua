@@ -4,20 +4,22 @@
 
 -- Setup
 local assert = assert
-local Tile = {}
+local Tile = {class = "Tile"}
 Tile.__index = Tile
 
 -- Creates a new tile and returns it.
 function Tile:new(id, tileset, quad, width, height, prop)
-	assert( id and tileset and quad, "Tile:new - Needs at least 3 parameters for id, tileset and quad.")
-	local tmp = {}
-	tmp.id = id						-- The id of the tile
-	tmp.tileset = tileset			-- The tileset this tile belongs to
-	tmp.quad = quad 				-- The of the tileset that defines the tile
-	tmp.width = width or 0			-- The width of the tile in pixels
-	tmp.height = height or 0		-- The height of the tile in pixels
-	tmp.properties = prop or {}		-- The properties of the tile set in Tiled
-	return setmetatable(tmp, Tile)
+	if not id or not tileset or not quad then
+		error("Tile:new - Needs at least 3 parameters for id, tileset and quad.")
+	end
+	local tile = setmetatable({}, Tile)
+	tile.id = id					-- The id of the tile
+	tile.tileset = tileset			-- The tileset this tile belongs to
+	tile.quad = quad 				-- The of the tileset that defines the tile
+	tile.width = width or 0			-- The width of the tile in pixels
+	tile.height = height or 0		-- The height of the tile in pixels
+	tile.properties = prop or {}	-- The properties of the tile set in Tiled
+	return tile
 end
 
 -- Draws the tile at the given location 
@@ -30,7 +32,7 @@ end
 return Tile
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

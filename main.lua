@@ -8,6 +8,7 @@ global.tx = 0					-- X translation of the screen
 global.ty = 0					-- Y translation of the screen
 global.scale = 1				-- Scale of the screen
 
+---------------------------------------------------------------------------------------------------
 -- Load the examples
 local example = {require("DesertExample"), require("IsoExample"),  
 				 require("PerspExample"), require("SewerExample")}
@@ -17,9 +18,11 @@ local fps = 0					-- Frames Per Second
 local fpsCount = 0				-- FPS count of the current second
 local fpsTime = 0				-- Keeps track of the elapsed time
 
+---------------------------------------------------------------------------------------------------
 -- Reset the current example
 if example[num].reset then example[num].reset() end
 
+---------------------------------------------------------------------------------------------------
 -- Scroll in and out
 function love.mousepressed( x, y, mb )
 	if mb == "wu" then
@@ -31,6 +34,7 @@ function love.mousepressed( x, y, mb )
 	end
 end
 
+---------------------------------------------------------------------------------------------------
 function love.update(dt)
 	-- Move the camera
 	if love.keyboard.isDown("up") then global.ty = global.ty + 250*dt end
@@ -51,7 +55,7 @@ function love.update(dt)
 	if example[num].update then example[num].update(dt) end
 end
 
-
+---------------------------------------------------------------------------------------------------
 function love.keypressed(k)
 	-- quit
     if k == 'escape' then
@@ -89,9 +93,9 @@ function love.keypressed(k)
 	if example[num].keypressed then example[num].keypressed(k) end
 end
 
-
+---------------------------------------------------------------------------------------------------
 function love.draw()
-
+	
 	-- Draw our example
 	example[num].draw()
 	

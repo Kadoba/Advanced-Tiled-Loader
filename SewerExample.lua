@@ -5,12 +5,14 @@ loader.path = "maps/"
 local map = loader.load("sewers.tmx")
 local SewerExample = {}
 
+---------------------------------------------------------------------------------------------------
 -- Resets the example
 function SewerExample.reset()
 	global.tx = 0
 	global.ty = 0
 end
 
+---------------------------------------------------------------------------------------------------
 -- Called from love.draw()
 function SewerExample.draw()
 
@@ -39,4 +41,5 @@ function SewerExample.draw()
 	love.graphics.pop()
 end
 
+---------------------------------------------------------------------------------------------------
 return SewerExample

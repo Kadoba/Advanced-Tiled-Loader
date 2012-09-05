@@ -3,8 +3,9 @@
 local loader = require("AdvTiledLoader.Loader")
 loader.path = "maps/"
 local map = loader.load("isometric.tmx")
-local layer = map.tl.Ground
+local layer = map.layers.Ground
 
+---------------------------------------------------------------------------------------------------
 -- The guy we're going to be moving around
 local Guy = {
 	tileX = 1,				-- The horizontal tile
@@ -24,33 +25,40 @@ local Guy = {
 	image = love.graphics.newImage("images/guy.png"),
 }
 
-
+---------------------------------------------------------------------------------------------------
 -- Move the guy to the relative location
 function Guy.move(x,y)
+
 	-- Change the facing direction
 	if x > 0 then Guy.facing = "downright"
 	elseif x < 0 then Guy.facing = "upleft"
 	elseif y > 0 then Guy.facing = "downleft"
 	else Guy.facing = "upright" end
+	
 	-- Grab the tile
-	local tile = layer.tileData(Guy.tileX+x, Guy.tileY+y)
+	local tile = layer(Guy.tileX+x, Guy.tileY+y)
+	
 	-- If the tile doesn't exist or is an obstacle then exit the function
 	if tile == nil then return end
 	if tile.properties.obstacle then return end
+	
 	-- Otherwise change the guy's tile
 	Guy.tileX = Guy.tileX + x
 	Guy.tileY = Guy.tileY + y
 end
 
+---------------------------------------------------------------------------------------------------
 -- Draw our guy. This function is passed to TileSet.drawAfterTile() which calls it passing the
 -- x and y value of the bottom left corner of the tile.
 function Guy.draw(x,y)
 	love.graphics.drawq(Guy.image, Guy.quads[Guy.facing], x+15, y-80)
 end
 
+---------------------------------------------------------------------------------------------------
 -- Our example class
 local IsoExample = {}
 
+---------------------------------------------------------------------------------------------------
 -- Called from love.keypressed()
 function IsoExample.keypressed(k)
 	if k == 'w' then Guy.move(0,-1) end
@@ -59,6 +67,7 @@ function IsoExample.keypressed(k)
 	if k == 'd' then Guy.move(1,0) end
 end
 
+---------------------------------------------------------------------------------------------------
 -- Resets the example
 function IsoExample.reset()
 	global.tx = -840
@@ -69,17 +78,18 @@ function IsoExample.reset()
 	displayTime = 0
 end
 
+---------------------------------------------------------------------------------------------------
 -- Update the display time for the character control instructions
 function IsoExample.update(dt)
 	displayTime = displayTime + dt
 end
 
+---------------------------------------------------------------------------------------------------
 -- Called from love.draw()
 function IsoExample.draw()
 
 	-- Set sprite batches
 	map.useSpriteBatch = global.useBatch
-	
 
 	-- Scale and translate the game screen for map drawing
 	local ftx, fty = math.floor(global.tx), math.floor(global.ty)
@@ -111,4 +121,5 @@ function IsoExample.draw()
 	
 end
 
+---------------------------------------------------------------------------------------------------
 return IsoExample

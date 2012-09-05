@@ -1,17 +1,21 @@
 
+---------------------------------------------------------------------------------------------------
 -- Setup
 local loader = require("AdvTiledLoader.Loader")
 loader.path = "maps/"
 local map = loader.load("perspective_walls.tmx")
 
+---------------------------------------------------------------------------------------------------
 local PerspExample = {}
 
+---------------------------------------------------------------------------------------------------
 -- Resets the example
 function PerspExample.reset()
 	global.tx = 0
 	global.ty = 0
 end
 
+---------------------------------------------------------------------------------------------------
 -- Called from love.draw()
 function PerspExample.draw()
 
@@ -40,4 +44,5 @@ function PerspExample.draw()
 	love.graphics.pop()
 end
 
+---------------------------------------------------------------------------------------------------
 return PerspExample

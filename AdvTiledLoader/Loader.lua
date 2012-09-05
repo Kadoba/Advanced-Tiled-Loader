@@ -7,13 +7,16 @@ TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Ll]oader$", ""
 
 -- A cache to store tileset images so we don't load them multiple times. Filepaths are keys.
 local cache = setmetatable({}, {__mode = "v"})
+
 -- This stores cached images' original dimensions. Images are weak keys.
 local cache_imagesize = setmetatable({}, {__mode="k"})
 
 -- Decompresses gzip and zlib
 local decompress = require(TILED_LOADER_PATH .. "external/deflatelua")
+
 -- Parser than turns an XML file into a table
 local xml_to_table = require(TILED_LOADER_PATH .. "external/xml")
+
 -- Base64 parser, Turns base64 strings into other data formats
 local base64 = require(TILED_LOADER_PATH .. "Base64")
 
@@ -25,10 +28,8 @@ local Tile = require(TILED_LOADER_PATH .. "Tile")
 local Object = require(TILED_LOADER_PATH .. "Object")
 local ObjectLayer = require(TILED_LOADER_PATH .. "ObjectLayer")
 
-
 local Loader = {
 	path = "", 				-- The path to tmx files.
-	fixPO2 = false, 	    -- If true, pads the images to the power of 2.
 	filterMin = "nearest",	-- The default min filter for image:setFilter()
 	filterMag = "nearest",  -- The default mag filter for image:setFilter()
 	useSpriteBatch = false,	-- The default setting for map.useSpriteBatch
@@ -38,6 +39,7 @@ local Loader = {
 local filename -- The name of the tmx file
 local fullpath -- The full path to the tmx file minus the name
 
+----------------------------------------------------------------------------------------------------
 -- Loads a Map from a tmx file and returns it.
 function Loader.load(tofile)
 	
@@ -73,40 +75,12 @@ end
 -- Private
 ----------------------------------------------------------------------------------------------------
 
--- Returns a new image from the filename. If Loader.fixPO2 is set to true then 
--- the images will automatically be padded to the power of 2.
-function Loader._newImage(info)
-	local source, padded, image
-	
-	-- If the image information is image data then assign it as the source
-	if info:type() == "ImageData" then  
-		source = info
-	-- Otherwise turn it into image data first
-	else
-		source = love.image.newImageData(info)
-	end
-
-    local w, h = source:getWidth(), source:getHeight()
-	
-	-- If we dont need to pad for PO2 then return now
-	if not Loader.fixPO2 then return love.graphics.newImage(source), w, h end
-	
-    -- Find closest power-of-two.
-    local wp = math.pow(2, math.ceil(math.log(w)/math.log(2)))
-    local hp = math.pow(2, math.ceil(math.log(h)/math.log(2)))
-   
-    -- Only pad if needed:
-    if wp ~= w or hp ~= h then
-        padded = love.image._newImageData(wp, hp)
-        padded:paste(source, 0, 0)
-	else
-		padded = source
-    end
-   
-	-- Return the fixed image
-    return love.graphics._newImage(padded), w, h 
+-- Returns a new image from the filename. 
+function Loader._newImage(source)
+	return love.graphics.newImage(source), source:getWidth(), source:getHeight()
 end
 
+----------------------------------------------------------------------------------------------------
 -- Checks to see if the table is a valid XML table
 function Loader._checkXML(t)
 	assert(type(t) == "table", "Loader._checkXML - Passed value is not a table")
@@ -116,7 +90,7 @@ function Loader._checkXML(t)
 	assert(t.xarg, "Loader._checkXML - Table does not contain an xarg table")
 end
 
-
+----------------------------------------------------------------------------------------------------
 -- This is used to eliminate naming conflicts. It checks to see if the string is inside the table and
 -- continues to rename it until there isn't a conflict.
 function Loader._checkName(t, str)
@@ -128,6 +102,7 @@ function Loader._checkName(t, str)
 	return str
 end
 
+----------------------------------------------------------------------------------------------------
 -- Processes a properties table and returns it
 function Loader._processProperties(t)
 
@@ -140,7 +115,13 @@ function Loader._processProperties(t)
 	for _,v in pairs(t) do
 		Loader._checkXML(t)
 		if v.label == "property" then
-			prop[v.xarg.name] = tonumber(v.xarg.value) or v.xarg.value
+			if v.xarg.value == "true" then
+				prop[v.xarg.name] = true
+			elseif v.xarg.value == "false" then
+				prop[v.xarg.name] = false
+			else
+				prop[v.xarg.name] = tonumber(v.xarg.value) or v.xarg.value
+			end
 		end
 	end
 	
@@ -148,6 +129,7 @@ function Loader._processProperties(t)
 	return prop
 end
 
+----------------------------------------------------------------------------------------------------
 -- Process Map data from xml table
 function Loader._processMap(name, t)
 	
@@ -182,15 +164,15 @@ function Loader._processMap(name, t)
 		-- Process TileLayer
 		if v.label == "layer" then
 			tilelayer = Loader._processTileLayer(v, map)
-			map.tl[tilelayer.name] = tilelayer
-			map.drawList[#map.drawList + 1] = tilelayer
+			map.layers[tilelayer.name] = tilelayer
+			map.layerOrder[#map.layerOrder + 1] = tilelayer
 		end
 		
 		-- Process ObjectLayer
 		if v.label == "objectgroup" then
 			objectlayer = Loader._processObjectLayer(v, map)
-			map.ol[objectlayer.name] = objectlayer
-			map.drawList[#map.drawList + 1] = objectlayer
+			map.layers[objectlayer.name] = objectlayer
+			map.layerOrder[#map.layerOrder + 1] = objectlayer
 		end
 		
 		-- Process Map properties
@@ -204,6 +186,7 @@ function Loader._processMap(name, t)
 	return map
 end
 
+----------------------------------------------------------------------------------------------------
 -- Process TileSet from xml table
 function Loader._processTileSet(t, map)
 
@@ -298,6 +281,7 @@ function Loader._processTileSet(t, map)
 	return tileset
 end
 
+----------------------------------------------------------------------------------------------------
 -- Process TileLayer from xml table
 function Loader._processTileLayer(t, map)
 
@@ -322,11 +306,12 @@ function Loader._processTileLayer(t, map)
 	end
 	
 	-- Return the new layer
-	local tl = TileLayer:new(map, t.xarg.name, t.xarg.opacity, properties)
-	tl:_populate(data)
-	return tl
+	local layers = TileLayer:new(map, t.xarg.name, t.xarg.opacity, properties)
+	layers:_populate(data)
+	return layers
 end
 
+----------------------------------------------------------------------------------------------------
 -- Process TileLayer data from xml table
 function Loader._processTileLayerData(t)
 
@@ -350,7 +335,7 @@ function Loader._processTileLayerData(t)
 			local decomp = t.xarg.compression == "gzip" and decompress.gunzip or decompress.inflate_zlib
 			-- Decompress the string into bytes
 			local bytes = {}
-			decomp({input = base64.decode("string", t[1]), output = function (b) bytes[#bytes+1] = b end})
+			decomp({input = base64.decode("string", t[1]), output = function(b) bytes[#bytes+1] = b end})
 			-- Glue the bytes into ints
 			for i=1,#bytes,4 do
 				data[#data+1] = base64.glueInt(bytes[i],bytes[i+1],bytes[i+2],bytes[i+3])
@@ -374,12 +359,15 @@ function Loader._processTileLayerData(t)
 	return data
 end
 
+----------------------------------------------------------------------------------------------------
 -- Process ObjectLayer from xml table
 function Loader._processObjectLayer(t, map)
 
 	-- Do some checking
 	Loader._checkXML(t)
-	assert(t.label == "objectgroup", "Loader._processObjectLayer - Passed table is not ObjectLayer data")
+	if t.label ~= "objectgroup" then
+		error("Loader._processObjectLayer - Passed table is not ObjectLayer data")
+	end
 	
 	-- Tiled stores colors in hexidecimal format that looks like "#FFFFFF" 
 	-- We need go convert them into base 10 RGB format
@@ -389,7 +377,7 @@ function Loader._processObjectLayer(t, map)
 					tonumber( "0x" .. t.xarg.color:sub(6,7) )}
 	
 	-- Create a new layer
-	local layer = ObjectLayer:new(map, Loader._checkName(map.ol, t.xarg.name), color, 
+	local layer = ObjectLayer:new(map, Loader._checkName(map.layers, t.xarg.name), color, 
 								  t.xarg.opacity)
 					
 	-- Process elements
@@ -401,8 +389,8 @@ function Loader._processObjectLayer(t, map)
 		local obj
 		if v.label == "object" then
 			obj = Object:new(layer, v.xarg.name, v.xarg.type, tonumber(v.xarg.x), 
-											 tonumber(v.xarg.y), tonumber(v.xarg.width), 
-											 tonumber(v.xarg.height), tonumber(v.xarg.gid) )
+								tonumber(v.xarg.y), tonumber(v.xarg.width), 
+								tonumber(v.xarg.height), tonumber(v.xarg.gid) )
 			objects[#objects+1] = obj
 			for _, v2 in ipairs(v) do
 			
@@ -412,15 +400,21 @@ function Loader._processObjectLayer(t, map)
 				end
 				
 				-- Process polyline objects
+				local polylineFunct = function(a) 
+					obj.polyline[#obj.polyline+1] = tonumber(a) or 0 
+				end
 				if v2.label == "polyline" then
 					obj.polyline = {}
-					string.gsub(v2.xarg.points, "[%-%d]+", function(a) obj.polyline[#obj.polyline+1] = tonumber(a) or 0 end)
+					string.gsub(v2.xarg.points, "[%-%d]+", polylineFunct)
 				end
 				
 				-- Process polyline objects
+				local polygonFunct = function(a) 
+					obj.polygon[#obj.polygon+1] = tonumber(a) or 0 
+				end
 				if v2.label == "polygon" then
 					obj.polygon = {}
-					string.gsub(v2.xarg.points, "[%-%d]+", function(a) obj.polygon[#obj.polygon+1] = tonumber(a) or 0 end)
+					string.gsub(v2.xarg.points, "[%-%d]+", polygonFunct)
 				end
 			
 			end
@@ -442,11 +436,12 @@ function Loader._processObjectLayer(t, map)
 	return layer
 end
 
+----------------------------------------------------------------------------------------------------
 -- Return the loader
 return Loader
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

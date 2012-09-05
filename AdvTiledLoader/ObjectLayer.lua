@@ -1,7 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 -- -= ObjectLayer =-
 ---------------------------------------------------------------------------------------------------
-
 -- Setup
 TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Oo]bject[Ll]ayer$", "") .. '.'
 local love = love
@@ -9,28 +8,29 @@ local unpack = unpack
 local pairs = pairs
 local ipairs = ipairs
 local Object = require( TILED_LOADER_PATH .. "Object")
-local ObjectLayer = {}
+local ObjectLayer = {class = "ObjectLayer"}
+local grey = {128,128,128,255}
 ObjectLayer.__index = ObjectLayer
 
-
+---------------------------------------------------------------------------------------------------
 -- Creates and returns a new ObjectLayer
 function ObjectLayer:new(map, name, color, opacity, prop)
 	
 	-- Create a new table for our object layer and do some error checking.
-	local ol = {}
-	assert(map, "ObjectLayer:new - Requires a parameter for map")
+	local layer = setmetatable({}, ObjectLayer)
 	
-	ol.map = map							-- The map this layer belongs to
-	ol.name = name or "Unnamed ObjectLayer"	-- The name of this layer
-	ol.color = color or {128,128,128,255}	-- The color theme
-	ol.opacity = opacity or 1				-- The opacity
-	ol.objects = {}							-- The layer's objects indexed by type
-	ol.properties = prop or {}				-- Properties set by Tiled.
+	layer.map = map								-- The map this layer belongs to
+	layer.name = name or "Unnamed ObjectLayer"	-- The name of this layer
+	layer.color = color or grey 				-- The color theme
+	layer.opacity = opacity or 1				-- The opacity
+	layer.objects = {}							-- The layer's objects indexed numerically
+	layer.properties = prop or {}				-- Properties set by Tiled.
 	
 	-- Return the new object layer
-	return setmetatable(ol, ObjectLayer)
+	return layer
 end
 
+---------------------------------------------------------------------------------------------------
 -- Creates a new object, automatically inserts it into the layer, and then returns it
 function ObjectLayer:newObject(name, type, x, y, width, height, gid, prop)
 	local obj = Object:new(self, name, type, x, y, width, height, gid, prop)
@@ -38,35 +38,39 @@ function ObjectLayer:newObject(name, type, x, y, width, height, gid, prop)
 	return obj
 end
 
+---------------------------------------------------------------------------------------------------
 -- Sorting function for objects. We'll use this below in ObjectLayer:draw()
 local function drawSort(o1, o2) 
 	return o1.drawInfo.order < o2.drawInfo.order 
 end
 
+---------------------------------------------------------------------------------------------------
 -- Draws the object layer. The way the objects are drawn depends on the map orientation and
 -- if the object has an associated tile. It tries to draw the objects as closely to the way
 -- Tiled does it as possible.
+local di, dr, drawList, r, g, b, a, line, obj
 function ObjectLayer:draw()
 
 	-- Exit if objects are not suppose to be drawn
 	if not self.map.drawObjects then return end
 
-	local di									-- The draw info
-	local rng = self.map.drawRange				-- The drawing range. [1-4] = x,y,width,height
-	local drawList = {}							-- A list of the objects to be drawn
-	local r,g,b,a = love.graphics.getColor()	-- Save the color so we can set it back at the end
-	local line	= love.graphics.getLineWidth()	-- Save the line width too
-	self.color[4] = 255 * self.opacity			-- Set the opacity
+	di = nil							-- The draw info
+	dr = self.map.drawRange			    -- The drawing range. [1-4] = x, y, width, height
+	drawList = {}						-- A list of the objects to be drawn
+	r,g,b,a = love.graphics.getColor()	-- Save the color so we can set it back at the end
+	line = love.graphics.getLineWidth()	-- Save the line width too
+	self.color[4] = 255 * self.opacity	-- Set the opacity
 	
 	-- Put only objects that are on the screen in the draw list. If the screen range isn't defined
 	-- add all objects
-	for k,obj in ipairs(self.objects) do
+	for i = 1, #self.objects do
+		obj = self.objects[i]
 		di = obj.drawInfo
-		if rng[1] and rng[2] and rng[3] and rng[4] then
-			if 	di.right > rng[1]-20 and 
-				di.bottom > rng[2]-20 and 
-				di.left < rng[1]+rng[3]+20 and 
-				di.top < rng[2]+rng[4]+20 then 
+		if dr[1] and dr[2] and dr[3] and dr[4] then
+			if 	di.right > dr[1]-20 and 
+				di.bottom > dr[2]-20 and 
+				di.left < dr[1]+dr[3]+20 and 
+				di.top < dr[2]+dr[4]+20 then 
 					drawList[#drawList+1] = obj
 			end
 		else
@@ -78,9 +82,10 @@ function ObjectLayer:draw()
 	table.sort(drawList, drawSort)
 
 	-- Draw all the objects in the draw list.
-	for k,obj in ipairs(drawList) do
+	for i = 1, #drawList do 
+		obj = drawList[i]
 		love.graphics.setColor(r,b,g,a)
-		obj:draw(di.x, di.y, unpack(self.color or neutralColor))
+		drawList[i]:draw(di.x, di.y, unpack(self.color or neutralColor))
 	end
 	
 	-- Reset the color and line width
@@ -92,7 +97,7 @@ end
 return ObjectLayer
 
 
---[[Copyright (c) 2011 Casey Baxter
+--[[Copyright (c) 2011-2012 Casey Baxter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
