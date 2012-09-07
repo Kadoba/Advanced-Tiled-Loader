@@ -1,5 +1,4 @@
-Advanced Tiled Loader by Kadoba (Casey Baxter)
-
+Advanced Tiled Loader
 --------------------------------------------------------------------------------------
 
 CHANGES:
@@ -11,12 +10,15 @@ CHANGES:
 - The functionality of tileData is now combined with TileLayer.
 - Changed Map.__call to return layers by their name.
 - Created Map.callback() to forward love callbacks to layers.
+- Created Map.swapLayers()
+- Created Map.newCustomLayers() which is a new interface for creating custom layers.
 - Classes now remember their class name.
-- There is now an interface for creating custom layers.
 - Removed object movement functions to deter the use of objects other than reading data from.
 - Removed the fixPO2 option for the loader.
 - Generally cleaned up the code and made it easier to read.
-- Properties are now automatically converted into proper types (numbers, boolean, string).
+- Properties are now automatically converted into proper types (numbers, boolean, string) when loaded.
+- Readme file changed. There is now a new VERSION.txt file for version information.
+
 
 0.10.2 (04/26/12)
 - Relative paths now fully work. Before, ATL did not like to travel backwards in 

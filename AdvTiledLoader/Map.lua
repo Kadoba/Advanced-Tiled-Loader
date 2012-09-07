@@ -148,11 +148,23 @@ function Map:draw()
 end
 
 ---------------------------------------------------------------------------------------------------
--- Returns the position of the layer inside the map's layerOrder
+-- Returns the position of the layer inside the map's layerOrder. Can be the layer name or table.
 function Map:layerPosition(layer)
+	if type(layer) == "string" then layer = self.layers[layer] end
 	for i = 1,#self.layerOrder do
 		if self.layerOrder[i] == layer then return i end
 	end
+end
+
+---------------------------------------------------------------------------------------------------
+-- Returns the position of the layer inside the map's layerOrder. The passed layers can be the 
+-- layer name, the layer tables themselves, or the layer positions.
+function Map:swapLayers(layer1, layer2)
+	if type(layer1) ~= "number" then layer1 = self:layerPosition(layer1) end
+	if type(layer2) ~= "number" then layer2 = self:layerPosition(layer2) end
+	local bubble = self.layers[layer1]
+	self.layers[layer1] = self.layers[layer2]
+	self.layers[layer2] = bubble
 end
 
 ---------------------------------------------------------------------------------------------------
