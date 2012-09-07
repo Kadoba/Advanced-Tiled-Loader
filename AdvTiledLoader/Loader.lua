@@ -29,11 +29,11 @@ local Object = require(TILED_LOADER_PATH .. "Object")
 local ObjectLayer = require(TILED_LOADER_PATH .. "ObjectLayer")
 
 local Loader = {
-	path = "", 				-- The path to tmx files.
+	path = "", 		-- The path to tmx files.
 	filterMin = "nearest",	-- The default min filter for image:setFilter()
 	filterMag = "nearest",  -- The default mag filter for image:setFilter()
-	useSpriteBatch = false,	-- The default setting for map.useSpriteBatch
-	drawObjects = true,		-- The default setting for map.drawObjects
+	useSpriteBatch = true,	-- The default setting for map.useSpriteBatch
+	drawObjects = true,	-- The default setting for map.drawObjects
 }
 
 local filename -- The name of the tmx file
