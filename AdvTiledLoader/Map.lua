@@ -103,6 +103,7 @@ function Map:newCustomLayer(name, position, layer)
 		error( string.format("Map:newCustomLayer - The layer name \"%s\" already exists.", name) )
 	end
 	self.layers[name] = layer or {name=name}
+	self.layers[name].class = "CustomLayer"
 	table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
 	return self.layers[name]
 end
