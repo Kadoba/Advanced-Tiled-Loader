@@ -13,6 +13,8 @@ Supported features include:
 * Isometric maps
 * Flipped and rotated tiles
 
+Example files can be found at https://github.com/Kadoba/Advanced-Tiled-Loader-Examples
+
 ----------------------------------------------------------------------------------------------------
 # Quick Example
   
@@ -77,3 +79,4 @@ map.tiles[4].properties
 map.drawObjects = false
 
 ```
+----------------------------------------------------------------------------------------------------
