@@ -20,6 +20,7 @@ function Object:new(layer, name, type, x, y, width, height, gid, prop)
 	obj.width = width or 0		-- Object width in tiles
 	obj.height = height or 0	-- Object height in tiles
 	obj.gid = gid				-- The object's associated tile. If false an outline will be drawn.
+	obj.visible = true			-- If false then the object will not be drawn
 	obj.properties = prop or {} -- Properties set by tiled.
 	
 	-- drawInfo stores values needed to actually draw the object. You can either set these yourself
@@ -137,6 +138,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Draw the object. The passed color is the color of the object layer the object belongs to.
 function Object:draw(x, y, r, g, b, a)
+
+	if not self.visible then return end
 	
 	local di = self.drawInfo
 	love.graphics.setLineWidth(2)

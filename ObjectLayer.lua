@@ -25,6 +25,7 @@ function ObjectLayer:new(map, name, color, opacity, prop)
 	layer.opacity = opacity or 1				-- The opacity
 	layer.objects = {}							-- The layer's objects indexed numerically
 	layer.properties = prop or {}				-- Properties set by Tiled.
+	layer.visible = true						-- If false then the layer will not be drawn
 	
 	-- Return the new object layer
 	return layer
@@ -50,6 +51,8 @@ end
 -- Tiled does it as possible.
 local di, dr, drawList, r, g, b, a, line, obj
 function ObjectLayer:draw()
+
+	if not self.visible then return end
 
 	-- Exit if objects are not suppose to be drawn
 	if not self.map.drawObjects then return end
@@ -93,6 +96,19 @@ function ObjectLayer:draw()
 	love.graphics.setLineWidth(line)
 end
 
+---------------------------------------------------------------------------------------------------
+-- Changes an object layer into a custom layer. A function can be passed to convert objects.
+function ObjectLayer:toCustomLayer(convert)
+	if convert then
+		for i = 1, #self.objects do
+			self.objects[i] = convert(self.objects[i])
+		end
+	end
+	self.class = "CustomLayer"
+	return setmetatable(self, nil)
+end
+
+---------------------------------------------------------------------------------------------------
 -- Return the ObjectLayer class
 return ObjectLayer
 

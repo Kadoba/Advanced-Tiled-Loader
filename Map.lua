@@ -40,6 +40,7 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, proper
 	map.orientation = orientation or "orthogonal"	-- Type of map. "orthogonal" or "isometric"
 	map.properties = properties or {}				-- Properties of the map set by Tiled
 	map.useSpriteBatch = true						-- If true then TileLayers use sprite batches.
+	map.visible = true								-- If false then the map will not be drawn
 	
 	map.layers  = {}				-- Layers of the map indexed by name
 	map.tilesets = {}				-- Tilesets indexed by name
@@ -145,7 +146,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Draw the map.
 function Map:draw()
-	self:callback("draw")
+	if self.visible then self:callback("draw") end
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -166,6 +167,15 @@ function Map:swapLayers(layer1, layer2)
 	local bubble = self.layers[layer1]
 	self.layers[layer1] = self.layers[layer2]
 	self.layers[layer2] = bubble
+end
+
+---------------------------------------------------------------------------------------------------
+-- Removes a layer from the map
+function Map:removeLayer(layer)
+	if type(layer) ~= "number" then layer = self:layerPosition(layer) end
+	layer = table.remove(self.layerOrder, layer)
+	self.layers[layer.name] = nil
+	return layer
 end
 
 ---------------------------------------------------------------------------------------------------

@@ -207,7 +207,7 @@ function Loader._processTileSet(t, map)
 		   "Loader._processTileSet - Tileset data is corrupt")
 	
 	-- Temporary storage
-	local image, imageWidth, imageHeight, path, prop
+	local image, imageWidth, imageHeight, path, prop, tileSetProperties
 	local tileProperties = {}
 	local tileoffset = {x=0,y=0}
 	
@@ -258,7 +258,7 @@ function Loader._processTileSet(t, map)
 		
 		-- Process tile set properties
 		if v.label == "properties" then
-			local tileSetProperties = Loader._processProperties(v)
+			tileSetProperties = Loader._processProperties(v)
 		end
 		
 		-- Get the tile offset if there is one.

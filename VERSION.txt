@@ -3,6 +3,11 @@ Advanced Tiled Loader
 
 CHANGES:
 
+0.11.1 (09/26/12)
+- Added a 'visible' value to Map, ObjectLayer, TileLayer, and Object
+- Created ObjectLayer:toCustomLayer()
+- Created Map:removeLayer()
+
 0.11.0 (09/04/12)
 - Renamed Map.drawList to Map.layerOrder.
 - Renamed Map.drawPosition to Map.layerPosition.

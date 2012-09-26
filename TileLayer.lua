@@ -26,6 +26,7 @@ function TileLayer:new(map, name, opacity, prop)
 	tl.map = map 				-- The map that this layer belongs to
 	tl.opacity = opacity or 1	-- The opacity to draw the tiles (0-1)
 	tl.properties = prop or {}	-- Properties set by Tiled
+	tl.visible = true			-- If false then the layer will not be drawn
 	tl.useSpriteBatch = nil		-- If true then the layer is rendered with sprite batches. If
 									-- false then the layer will not use sprite batches. If nil then 
 									-- map.useSpriteBatch will be used. Note that using sprite 
@@ -66,6 +67,8 @@ local at, drawX, drawY, flipX, flipY, r, g, b, a, halfW, halfH
 local x1, y1, x2, y2
 -- Draws the TileLayer.
 function TileLayer:draw()
+
+	if not self.visible then return end
 
 	-- We access these a lot so we'll shorted them a bit. 
 	map, tiles = self.map, self.map.tiles
