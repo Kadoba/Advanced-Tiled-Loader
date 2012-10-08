@@ -49,7 +49,7 @@ end
 -- Draws the object layer. The way the objects are drawn depends on the map orientation and
 -- if the object has an associated tile. It tries to draw the objects as closely to the way
 -- Tiled does it as possible.
-local di, dr, drawList, r, g, b, a, line, obj
+local di, dr, drawList, r, g, b, a, line, obj, offsetX, offsetY
 function ObjectLayer:draw()
 
 	if not self.visible then return end
@@ -58,7 +58,7 @@ function ObjectLayer:draw()
 	if not self.map.drawObjects then return end
 
 	di = nil							-- The draw info
-	dr = self.map.drawRange			    -- The drawing range. [1-4] = x, y, width, height
+	dr = {self.map:getDrawRange()}		-- The drawing range. [1-4] = x, y, width, height
 	drawList = {}						-- A list of the objects to be drawn
 	r,g,b,a = love.graphics.getColor()	-- Save the color so we can set it back at the end
 	line = love.graphics.getLineWidth()	-- Save the line width too
@@ -68,6 +68,7 @@ function ObjectLayer:draw()
 	-- add all objects
 	for i = 1, #self.objects do
 		obj = self.objects[i]
+		obj:updateDrawInfo()
 		di = obj.drawInfo
 		if dr[1] and dr[2] and dr[3] and dr[4] then
 			if 	di.right > dr[1]-20 and 
@@ -85,6 +86,7 @@ function ObjectLayer:draw()
 	table.sort(drawList, drawSort)
 
 	-- Draw all the objects in the draw list.
+	offsetX, offsetY = self.map.offsetX, self.map.offsetY
 	for i = 1, #drawList do 
 		obj = drawList[i]
 		love.graphics.setColor(r,b,g,a)

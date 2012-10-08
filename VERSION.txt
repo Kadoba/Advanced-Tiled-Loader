@@ -3,6 +3,14 @@ Advanced Tiled Loader
 
 CHANGES:
 
+0.11.2 (10/08/12)
+- TileLayers will now calculate their own viewable tile range.
+- Added parallax support for TileLayers.
+- Added offset support for Maps and TileLayers.
+- Map.drawRange has been removed and replaced with viewX, viewY, viewScaling, and viewPadding.
+	Map:autoDrawRange() and other such interface functions have not changed.
+
+
 0.11.1 (09/26/12)
 - Added a 'visible' value to Map, ObjectLayer, TileLayer, and Object
 - Created ObjectLayer:toCustomLayer()

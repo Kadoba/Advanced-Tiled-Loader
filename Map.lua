@@ -12,9 +12,6 @@ local Object = require( TILED_LOADER_PATH .. "Object")
 local ObjectLayer = require( TILED_LOADER_PATH .. "ObjectLayer")
 
 -- Localize some functions so they are faster
-local pairs = pairs
-local ipairs = ipairs 
-local assert = assert
 local love = love
 local table = table
 local ceil = math.ceil
@@ -42,24 +39,28 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, proper
 	map.useSpriteBatch = true						-- If true then TileLayers use sprite batches.
 	map.visible = true								-- If false then the map will not be drawn
 	
-	map.layers  = {}				-- Layers of the map indexed by name
-	map.tilesets = {}				-- Tilesets indexed by name
-	map.tiles = {}					-- Tiles indexed by id
+	map.viewX = 0				-- X coord of the viewing screen. This is usually -translationX
+	map.viewY = 0				-- Y coord of the viewing screen. This is usually -translationY
+	map.viewW = nil				-- The width of the viewing screen
+	map.viewH = nil				-- The height of the viewing screen
+	map.viewScaling = 1			-- The view scaling
+	map.viewPadding = 0			-- The padding around the view
 	
-	map.layerOrder = {}				-- The order of the layers. Callbacks are called in this order.				
-	map.drawObjects = true			-- If true then object layers will be drawn
-	map.drawRange = {}				-- Limits the drawing of tiles and objects. 
-									-- [1]:x [2]:y [3]:width [4]:height
+	map.offsetX = 0				-- Drawing offset X
+	map.offsetY = 0				-- Drawing offset Y
 	
+	map.layers  = {}			-- Layers of the map indexed by name
+	map.tilesets = {}			-- Tilesets indexed by name
+	map.tiles = {}				-- Tiles indexed by id
+	map.layerOrder = {}			-- The order of the layers. Callbacks are called in this order.				
+	map.drawObjects = true		-- If true then object layers will be drawn
+
 	-- Private:
-	map._widestTile = 0				-- The widest tile on the map.
-	map._highestTile = 0			-- The tallest tile on the map.
-	map._tileRange = {}				-- The range of drawn tiles. [1]:x [2]:y [3]:width [4]:height
-	map._previousTileRange = {}		-- The previous _tileRange. If this changed then we redraw sprite batches.
-	map._redraw = true				-- If true then the map needs to redraw sprite batches.
-	map._forceRedraw = false		-- If true then the next redraw is forced
-	map._previousUseSpriteBatch = false   -- The previous useSpiteBatch. If this changed then we redraw sprite batches.
-	map._tileClipboard	=	nil		-- The value that stored for TileLayer:tileCopy() and TileLayer:tilePaste()
+	map._widestTile = 0					-- The widest tile on the map.
+	map._highestTile = 0				-- The tallest tile on the map.
+	map._forceRedraw = false			-- If true then the next redraw is forced
+	map._previousUseSpriteBatch = false -- The previous useSpiteBatch.
+	map._tileClipboard	=	nil			-- The value that stored for tile copying and pasting.
 	
 	-- Return the new map
 	return map
@@ -67,9 +68,11 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- Creates a new tileset and adds it to the map. The map will then auto-update its tiles.
-function Map:newTileSet(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop)
-	assert(name, "Map:newTileSet - The name parameter is invalid")
-	self.tilesets[name] = TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop)
+function Map:newTileSet(img, name, tilew, tileh, w, h, firstgid, space, marg, tprop)
+	if not name then
+		error("Map:newTileSet - The name parameter is invalid")
+	end
+	self.tilesets[name] = TileSet:new(img, name, tilew, tileh, w, h, firstgid, space, marg, tprop)
 	self:updateTiles()
 	return self.tilesets[name]
 end
@@ -128,7 +131,6 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Forces the map to redraw the sprite batches.
 function Map:forceRedraw()
-	self._redraw = true
 	self._forceRedraw = true
 end
 
@@ -201,23 +203,29 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Sets the draw range
 function Map:setDrawRange(x,y,w,h)
-	self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4] = x, y, w, h
-end
-
----------------------------------------------------------------------------------------------------
--- Gets the draw range
-function Map:getDrawRange()
-	return self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4]
+	self.viewX, self.viewY, self.viewW, self.viewH = x, y, w, h
+	self.viewPadding = 0
+	self.viewScaling = 1
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Automatically sets the draw range to fit the display
 function Map:autoDrawRange(tx, ty, scale, pad)
 	tx, ty, scale, pad = tx or 0, ty or 0, scale or 1, pad or 0
-	if scale > 0.001 then
-		self:setDrawRange(-tx-pad,-ty-pad,love.graphics.getWidth()/scale+pad*2,
-						  love.graphics.getHeight()/scale+pad*2)
-	end
+	self.viewX = -tx
+	self.viewY = -ty
+	self.viewW = love.graphics.getWidth()
+	self.viewH = love.graphics.getHeight()
+	self.viewScaling = scale > 0.001 and scale or 0.001
+	self.viewPadding = pad
+end
+
+---------------------------------------------------------------------------------------------------
+-- Returns the normal draw range
+function Map:getDrawRange()
+	return self.viewX - self.viewPadding, self.viewY - self.viewPadding,
+			self.viewW/self.viewScaling + self.viewPadding*2, 
+			self.viewH/self.viewScaling + self.viewPadding*2
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -225,70 +233,85 @@ end
 ----------------------------------------------------------------------------------------------------
 -- This is an internal function used to update the map's _tileRange, _previousTileRange, and 
 -- _specialRedraw
-local x1, y1, x2, y2, highOffset, widthOffset, tr, ptr
+local x1, y1, x2, y2, highOffset, widthOffset, tr, ptr, layer
 function Map:_updateTileRange()
 	
 	-- Offset to make sure we can always draw the highest and widest tile
 	heightOffset = self._highestTile - self.tileHeight
 	widthOffset = self._widestTile - self.tileWidth
 	
-	-- Set the previous tile range
-	for i=1,4 do self._previousTileRange[i] = self._tileRange[i] end
-	
-	-- Get the draw range. We will replace these values with the tile range.
-	x1, y1, x2, y2 = self.drawRange[1], self.drawRange[2], self.drawRange[3], self.drawRange[4]
-	
-	-- Calculate the _tileRange for orthogonal tiles
-	if self.orientation == "orthogonal" then
-	
-		-- Limit the drawing range. We must make sure we can draw the tiles that are bigger
-		-- than the self's tileWidth and tileHeight.
-		if x1 and y1 and x2 and y2 then
-			x2 = ceil(x2/self.tileWidth)
-			y2 = ceil((y2+heightOffset)/self.tileHeight)
-			x1 = floor((x1-widthOffset)/self.tileWidth)
-			y1 = floor(y1/self.tileHeight)
+	-- Go through each layer
+	for i = 1,#self.layerOrder do
+		layer = self.layerOrder[i]
+
+		-- If the layer is a TileLayer
+		if layer.class == "TileLayer" then
 		
-			-- Make sure that we stay within the boundry of the map
-			x1 = x1 > 0 and x1 or 0
-			y1 = y1 > 0 and y1 or 0
-			x2 = x2 < self.width and x2 or self.width - 1
-			y2 = y2 < self.height and y2 or self.height - 1
+			-- Get the draw range. 
+			x1 = self.viewX * layer.parallaxX - self.viewPadding + layer.offsetX
+			y1 = self.viewY * layer.parallaxY - self.viewPadding + layer.offsetY
+			x2 = self.viewW/self.viewScaling + self.viewPadding*2
+			y2 = self.viewH/self.viewScaling + self.viewPadding*2
+			
+			-- Apply the offset
+			x1 = x1 - self.offsetX - layer.offsetX
+			y1 = y1 - self.offsetY - layer.offsetY
 		
-		else
-			-- If the drawing range isn't defined then we draw all the tiles
-			x1, y1, x2, y2 = 0, 0, self.width-1, self.height-1
-		end
+			-- Calculate the _tileRange for orthogonal tiles
+			if self.orientation == "orthogonal" then
 		
-	-- Calculate the _tileRange for isometric tiles.
-	else
-		-- If the drawRange is set
-		if x1 and y1 and x2 and y2 then
-			x1, y1 = self:toIso(x1-self._widestTile,y1)
-			x1, y1 = ceil(x1/self.tileHeight), ceil(y1/self.tileHeight)-1
-			x2 = ceil((x2+self._widestTile)/self.tileWidth)
-			y2 = ceil((y2+heightOffset)/self.tileHeight)
-		-- else draw everything
-		else
-			x1 = 0
-			y1 = 0
-			x2 = self.width - 1
-			y2 = self.height - 1
+				-- Limit the drawing range. We must make sure we can draw the tiles that are bigger
+				-- than the self's tileWidth and tileHeight.
+				if x1 and y1 and x2 and y2 then
+					x2 = ceil(x2/self.tileWidth)
+					y2 = ceil((y2+heightOffset)/self.tileHeight)
+					x1 = floor((x1-widthOffset)/self.tileWidth)
+					y1 = floor(y1/self.tileHeight)
+			
+					-- Make sure that we stay within the boundry of the map
+					x1 = x1 > 0 and x1 or 0
+					y1 = y1 > 0 and y1 or 0
+					x2 = x2 < self.width and x2 or self.width - 1
+					y2 = y2 < self.height and y2 or self.height - 1
+			
+				else
+					-- If the drawing range isn't defined then we draw all the tiles
+					x1, y1, x2, y2 = 0, 0, self.width-1, self.height-1
+				end
+			
+			-- Calculate the _tileRange for isometric tiles.
+			else
+				-- If the drawRange is set
+				if x1 and y1 and x2 and y2 then
+					x1, y1 = self:toIso(x1-self._widestTile,y1)
+					x1, y1 = ceil(x1/self.tileHeight), ceil(y1/self.tileHeight)-1
+					x2 = ceil((x2+self._widestTile)/self.tileWidth)
+					y2 = ceil((y2+heightOffset)/self.tileHeight)
+				-- else draw everything
+				else
+					x1 = 0
+					y1 = 0
+					x2 = self.width - 1
+					y2 = self.height - 1
+				end
+			end
+		
+			-- Assign the new values to the tile range
+			tr, ptr = layer._tileRange, layer._previousTileRange
+			ptr[1], ptr[2], ptr[3], ptr[4] = tr[1], tr[2], tr[3], tr[4]
+			tr[1], tr[2], tr[3], tr[4] =  x1, y1, x2, y2
+		
+			-- If the tile range or useSpriteBatch is different than the last frame then we need to 
+			-- update its sprite batches.
+			layer._redraw = self.useSpriteBatch ~= self._previousUseSpriteBatch or 
+							self._forceRedraw or
+							tr[1] ~= ptr[1] or 
+							tr[2] ~= ptr[2] or 
+							tr[3] ~= ptr[3] or 
+							tr[4] ~= ptr[4]
 		end
 	end
 	
-	-- Assign the new values to the tile range
-	tr, ptr = self._tileRange, self._previousTileRange
-	tr[1], tr[2], tr[3], tr[4] = x1, y1, x2, y2
-	
-	-- If the tile range or useSpriteBatch is different than the last frame then we need to 
-	-- update sprite batches.
-	self._redraw = self.useSpriteBatch ~= self._previousUseSpriteBatch or self._forceRedraw or
-						  tr[1] ~= ptr[1] or 
-						  tr[2] ~= ptr[2] or 
-						  tr[3] ~= ptr[3] or 
-						  tr[4] ~= ptr[4]
-						  
 	-- Set the previous useSpritebatch
 	self._previousUseSpriteBatch = self.useSpriteBatch
 						  

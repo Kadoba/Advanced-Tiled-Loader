@@ -74,6 +74,7 @@ function Object:updateDrawInfo()
 				else
 					di[k], di[k+1] = self.x+vertexes[k], self.y+vertexes[k+1]
 				end
+				di[k], di[k+1] = di[k] - map.offsetX, di[k+1] - map.offsetY
 			end
 		end
 		-- Set the start draw location
@@ -101,6 +102,7 @@ function Object:updateDrawInfo()
 			local t = map.tiles[self.gid]
 			local tw, th = t.width, t.height
 			di.x, di.y  = map:fromIso(self.x, self.y)
+			di.x, di.y = di.x - map.offsetX, di.y - map.offsetY
 			di.order = di.y
 			di.x, di.y = di.x - map.tileWidth/2, di.y - th
 			di.left, di.right, di.top, di.bottom = di.x, di.x+tw, di.y , di.y +th
@@ -110,6 +112,10 @@ function Object:updateDrawInfo()
 			di[3], di[4] = map:fromIso(self.x + self.width, self.y)
 			di[5], di[6] = map:fromIso(self.x + self.width, self.y + self.height)
 			di[7], di[8] = map:fromIso(self.x, self.y + self.height)
+			for i =1,7,2 do
+				di[i] = di[i] - map.offsetX
+				di[i+1] = di[i+1] - map.offsetY
+			end
 			di.left, di.right, di.top, di.bottom = di[7], di[3], di[2], di[6]
 			di.order = 1
 		end
@@ -120,14 +126,14 @@ function Object:updateDrawInfo()
 		if self.gid then
 			local t = map.tiles[self.gid]
 			local tw, th = t.width, t.height
-			di.x, di.y = self.x, self.y
+			di.x, di.y = self.x - map.offsetX, self.y - map.offsetY
 			di.order = di.y
 			di.y = di.y - th
 			di.left, di.top, di.right, di.bottom = di.x, di.y, di.x+tw, di.y+th
 		-- Is not a tile object
 		else
-			di.x, di.y = self.x, self.y
-			di[1], di[2] = self.x, self.y
+			di.x, di.y = self.x - map.offsetX, self.y - map.offsetY
+			di[1], di[2] = di.x, di.y
 			di[3], di[4] = self.width > 20 and self.width or 20, self.height > 20 and self.height or 20
 			di.left, di.top, di.right, di.bottom = di.x, di.y , di.x+di[3], di.y +di[4]
 			di.order = 1
@@ -167,7 +173,7 @@ function Object:draw(x, y, r, g, b, a)
 	-- The object is a tile object. Draw the tile.
 	elseif self.gid then
 		local tile = self.layer.map.tiles[self.gid]
-		tile:draw(self.x, self.y - tile.height)
+		tile:draw(di.x, di.y - tile.height)
 		
 	-- Map is isometric. Draw a parallelogram.
 	elseif self.layer.map.orientation == "isometric" then

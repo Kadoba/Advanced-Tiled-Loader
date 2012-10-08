@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 -- Setup
 TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Tt]ile[Ll]ayer$", "") .. '.'
-local floor = math.floor
+local math = math
 local type = type
 local love = love
 local Grid = require(TILED_LOADER_PATH .. "Grid")
@@ -30,13 +30,23 @@ function TileLayer:new(map, name, opacity, prop)
 	tl.useSpriteBatch = nil		-- If true then the layer is rendered with sprite batches. If
 									-- false then the layer will not use sprite batches. If nil then 
 									-- map.useSpriteBatch will be used. Note that using sprite 
-									-- batches will break the draw order when using multiple tilesets
-									-- on the same layer. Using Map.drawAfterTile is also not possible.
+									-- batches might break the draw order when using multiple 
+									-- tilesets on the same layer. Using Map.drawAfterTile is also 
+									-- not possible.
+	
+	tl.parallaxX = 1			-- The horizontal speed of the parallax. 1 is normal
+	tl.parallaxY = 1			-- The vertical speed of the parallax. 1 is normal
+	tl.offsetX = 0				-- Drawing offset X
+	tl.offsetY = 0				-- Drawing offset Y
+	
 	-- Private:
+	tl._redraw = true					-- If true then the layer needs to redraw tis sprite batches.
+	tl._tileRange = {0,0,0,0}			-- Keeps the drawn tile range for the layer
+	tl._previousTileRange = {0,0,0,0}	-- Previous _tileRange
 	tl._batches = {}					-- Keeps track of the sprite batches for each tileset
-	tl._flippedTiles = Grid:new()		-- Stores the flipped tile locations. 1 = flipped X, 2 = flipped Y, 3 = both
+	tl._flippedTiles = Grid:new()		-- Stores the flipped tile locations. 
+											-- 1 = flipped X, 2 = flipped Y, 3 = both
 	tl._afterTileFunctions = Grid:new()	-- Functions that must happen right after a tile is drawn.
-	tl._tileClipboard = nil				-- The value that is copied and pasted in tileCopy() and tilePaste)
 	tl._previousUseSpriteBatch = false	-- The previous useSpriteBatch. If this is different then we 
 											-- need to force a special redraw
 	return tl
@@ -68,6 +78,7 @@ local x1, y1, x2, y2
 -- Draws the TileLayer.
 function TileLayer:draw()
 
+	-- Early exit of the layer is not visible
 	if not self.visible then return end
 
 	-- We access these a lot so we'll shorted them a bit. 
@@ -88,17 +99,24 @@ function TileLayer:draw()
 	love.graphics.setColor(r,g,b, a*self.opacity)
 	
 	-- Clear sprite batches if the screen has changed.
-	if map._redraw and useSpriteBatch then
+	if self._redraw and useSpriteBatch then
 		for k,v in pairs(self._batches) do
 			v:clear()
 		end
 	end
 	
 	-- Get the tile range
-	x1, y1, x2, y2 = map._tileRange[1], map._tileRange[2], map._tileRange[3], map._tileRange[4]
+	x1, y1, x2, y2 = self._tileRange[1], self._tileRange[2], self._tileRange[3], self._tileRange[4]
+	
+	-- Translate for the parallax
+	if self.parallaxX ~= 1 or self.parallaxY ~= 1 then
+		love.graphics.push()
+		love.graphics.translate(math.floor(map.viewX - map.viewX*self.parallaxX), 
+								math.floor(map.viewY - map.viewY*self.parallaxY))
+	end
 	
 	-- Only draw if we're not using sprite batches or we need to update the sprite batches.
-	if map._redraw or not useSpriteBatch then
+	if self._redraw or not useSpriteBatch then
 	
 		-- Orthogonal tiles
 		if map.orientation == "orthogonal" then
@@ -108,6 +126,9 @@ function TileLayer:draw()
 				halfW, halfH = tile.width*0.5, tile.height*0.5
 				-- Draw the tile from the bottom left corner
 				drawX, drawY = (x)*map.tileWidth, (y+1)*map.tileHeight
+				-- Apply the offset
+				drawX = drawX - map.offsetX - self.offsetX
+				drawY = drawY - map.offsetY - self.offsetY
 				-- Get the flipped tiles
 				if self._flippedTiles(x,y) then
 					rot =  (self._flippedTiles(x,y) % 2) == 1 and true or false
@@ -122,7 +143,8 @@ function TileLayer:draw()
 				if useSpriteBatch then
 					-- If we dont have a spritebatch for the current tile's tileset then make one
 					if not self._batches[tile.tileset] then 
-						self._batches[tile.tileset] = love.graphics.newSpriteBatch(tile.tileset.image, map.width * map.height)
+						self._batches[tile.tileset] = love.graphics.newSpriteBatch(
+														tile.tileset.image, map.width * map.height)
 					end
 					-- Add the quad to the spritebatch
 					self._batches[tile.tileset]:addq(tile.quad, drawX + halfW, 
@@ -178,22 +200,27 @@ function TileLayer:draw()
 								-- Get the half-width and half-height
 								halfW, halfH = tile.width*0.5, tile.height*0.5
 								-- Get the tile draw location
-								drawX = floor(draw_start + map.tileWidth/2 * (x - y-2))
-								drawY = floor(map.tileHeight/2 * (x + y+2))
+								drawX = math.floor(draw_start + map.tileWidth/2 * (x - y-2))
+								drawY = math.floor(map.tileHeight/2 * (x + y+2))
+								-- Apply the offset
+								drawX = drawX - map.offsetX - self.offsetX
+								drawY = drawY - map.offsetY - self.offsetY
 								
 								-- Using sprite batches
 								if useSpriteBatch then
-									-- If we dont have a spritebatch for the current tile's tileset then make one
+									-- If we dont have a spritebatch for the current tile's tileset 
+									-- then make one
 									if not self._batches[tile.tileset] then 
 										self._batches[tile.tileset] = love.graphics.newSpriteBatch(
-																				tile.tileset.image, 
-																				map.width * map.height)
+																			tile.tileset.image, 
+																			map.width * map.height)
 									end
 									-- Add the tile to the sprite batch.
-									self._batches[tile.tileset]:addq(tile.quad, drawX + halfW + (rot and halfW or 0), 
-																	drawY-halfH+(rot and halfW or 0), 
-																	rot and math.pi*1.5 or 0, 
-																	flipX, flipY, halfW, halfH)
+									self._batches[tile.tileset]:addq(tile.quad, drawX + halfW + 
+																(rot and halfW or 0), 
+																drawY-halfH+(rot and halfW or 0), 
+																rot and math.pi*1.5 or 0, 
+																flipX, flipY, halfW, halfH)
 																	
 								-- Not using sprite batches
 								else
@@ -201,10 +228,14 @@ function TileLayer:draw()
 												drawY - halfH + (rot and halfW or 0), 
 												rot and math.pi*1.5 or 0, 
 												flipX, flipY, halfW, halfH)
-									-- If there's something in the _afterTileFunctions for this tile then call it
+									-- If there's something in the _afterTileFunctions for 
+									-- this tile then call it
 									at = self._afterTileFunctions(x,y)
-									if type(at) == "function" then at(drawX, drawY)
-									elseif type(at) == "table" then for i=1,#at do at[i](drawX, drawY) end end
+									if type(at) == "function" then 
+										at(drawX, drawY)
+									elseif type(at) == "table" then 
+										for i=1,#at do at[i](drawX, drawY) end 
+									end
 								end -- sprite batches
 								
 							end -- tile drawable
@@ -215,11 +246,19 @@ function TileLayer:draw()
 		end --isometric
 	end
 	
+	-- We finished redrawing
+	self._redraw = false
+	
 	-- If sprite batches are turned on then render them
 	if useSpriteBatch then
 		for k,v in pairs(self._batches) do
 			love.graphics.draw(v)
 		end
+	end
+	
+	-- If we applied a translation for our parallax then remove it
+	if self.parallaxX ~= 1 or self.parallaxY ~= 1 then
+		love.graphics.pop()
 	end
 	
 	-- Clears the draw list
@@ -244,10 +283,13 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Paste a copied tile.
 function TileLayer:tilePaste(x,y)
-	assert(self.map._tileClipboard, "TileLayer:tilePaste() - A tile must be copied with tileCopy() before pasting")
+	self._redraw = true
+	if not self.map._tileClipboard then
+		error("TileLayer:tilePaste() - A tile must be copied with tileCopy() before pasting")
+	end
 	local clip = self.map._tileClipboard 
 	if clip / flippedVal > 0 then
-		self._flippedTiles:set(x, y, floor(clip / flippedVal))
+		self._flippedTiles:set(x, y, math.floor(clip / flippedVal))
 	end
 	self:set(x, y, self.map.tiles[clip % flippedVal])
 end
@@ -255,6 +297,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Flip the tile's X. If doFlip is not specified then the flip is toggled.
 function TileLayer:tileFlipX(x, y, doFlip)
+	self._redraw = true
 	local flip = self._flippedTiles(x,y) or 0
 	if doFlip ~= false and flip < 4 then 
 		flip = flip + 4
@@ -267,6 +310,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Flip the tile's Y. If doFlip is not specified then the flip is toggled.
 function TileLayer:tileFlipY(x, y, doFlip)
+	self.redraw = true
 	local flip = self._flippedTiles(x,y) or 0
 	if doFlip ~= false and flip % 4 < 2 then 
 		flip = flip + 2
@@ -330,7 +374,7 @@ function TileLayer:_populate(t)
 		
 		-- If the tile has a value in the last three binary digits then we seperate them
 		if tileID >= flipped then 
-			self._flippedTiles:set(x, y, floor(tileID / flipped))
+			self._flippedTiles:set(x, y, math.floor(tileID / flipped))
 			tileID = tileID % flipped
 		end
 		
