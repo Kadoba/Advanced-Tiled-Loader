@@ -7,6 +7,7 @@ CHANGES:
 - TileLayers will now calculate their own viewable tile range.
 - Added parallax support for TileLayers.
 - Added offset support for Maps and TileLayers.
+- You can now load .tmx files without including the extension in the file name.
 - Map.drawRange has been removed and replaced with viewX, viewY, viewScaling, and viewPadding.
 	Map:autoDrawRange() and other such interface functions have not changed.
 

@@ -39,12 +39,12 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, proper
 	map.useSpriteBatch = true						-- If true then TileLayers use sprite batches.
 	map.visible = true								-- If false then the map will not be drawn
 	
-	map.viewX = 0				-- X coord of the viewing screen. This is usually -translationX
-	map.viewY = 0				-- Y coord of the viewing screen. This is usually -translationY
-	map.viewW = nil				-- The width of the viewing screen
-	map.viewH = nil				-- The height of the viewing screen
-	map.viewScaling = 1			-- The view scaling
-	map.viewPadding = 0			-- The padding around the view
+	map.viewX = 0									-- X coord of the viewing screen. 
+	map.viewY = 0									-- Y coord of the viewing screen. 
+	map.viewW = love.graphics.getWidth()			-- The width of the viewing screen
+	map.viewH = love.graphics.getHeight()			-- The height of the viewing screen
+	map.viewScaling = 1								-- The game scaling
+	map.viewPadding = 10							-- Padding for the view
 	
 	map.offsetX = 0				-- Drawing offset X
 	map.offsetY = 0				-- Drawing offset Y

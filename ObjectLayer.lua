@@ -52,6 +52,7 @@ end
 local di, dr, drawList, r, g, b, a, line, obj, offsetX, offsetY
 function ObjectLayer:draw()
 
+	-- Early exit if the layer is not visible.
 	if not self.visible then return end
 
 	-- Exit if objects are not suppose to be drawn

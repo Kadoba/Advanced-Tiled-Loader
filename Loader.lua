@@ -56,6 +56,16 @@ function Loader.load(tofile)
 	-- Get the path to the file
 	fullpath = string.gsub(fullpath, "[^/^\\]+$", "")
 	
+	-- If the file does not exist then try to add .tmx to the end
+	if not love.filesystem.exists(fullpath .. filename) then
+		if not love.filesystem.exists(fullpath .. filename .. ".tmx") then
+			error(string.format("Loader.load() - Could not find file \"%s\" or \"%s\"", 
+									fullpath .. filename, fullpath .. filename .. ".tmx"))
+		else
+			filename = filename .. ".tmx"
+		end
+	end
+	
 	-- Read the file and parse it into a table
 	local t = love.filesystem.read(fullpath .. filename)
 	t = xml_to_table(t)
