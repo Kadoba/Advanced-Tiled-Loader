@@ -315,10 +315,15 @@ function Loader._processTileLayer(t, map)
 		end
 	end
 	
-	-- Return the new layer
-	local layers = TileLayer:new(map, t.xarg.name, t.xarg.opacity, properties)
-	layers:_populate(data)
-	return layers
+	-- Create the new layer
+	local layer = TileLayer:new(map, t.xarg.name, t.xarg.opacity, properties)
+	
+	-- Set the visibility
+	layer.visible = not (t.xarg.visible == "0")
+	
+	-- Populate the tiles and return the layer
+	layer:_populate(data)
+	return layer
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -441,6 +446,9 @@ function Loader._processObjectLayer(t, map)
 	-- Set the properties and object tables
 	layer.properties = prop
 	layer.objects = objects
+	
+	-- Set the visibility
+	layer.visible = not (t.xarg.visible == "0")
 	
 	-- Return the layer
 	return layer
