@@ -11,63 +11,63 @@ TileSet.__index = TileSet
 ----------------------------------------------------------------------------------------------------
 -- Creates a new tileset.
 function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop, prop)
-	assert( img and name and tilew and tileh and width and height and firstgid,
-		   "TileSet:new - Needs at least 7 parameters for image, name, " ..
-		   "tileWidth, tileHeight, width, height, and firstgid")
-	local ts = {}
-	
-	-- Public:
-	ts.image = img 				-- The image of the tileset
-	ts.name = name 				-- Name of the tilseset
-	ts.tileWidth = tilew 		-- The width of each tile in pixels
-	ts.tileHeight = tileh 		-- The height of each tile in pixels
-	ts.width = width			-- The width of the tileset image in pixels
-	ts.height = height 			-- The height of the tileset image in pixels
-	ts.firstgid = firstgid		-- The id of the first tile
-	ts.spacing = space or 0		-- The spacing in pixels between each tile
-	ts.margin = marg or 0		-- The margin in pixels surrounding the entire tile set.
-	ts.tileProperties = tprop or {}	-- Properties of contained tiles indexed by the tile's gid
-	ts.properties = prop or {}	-- The properties of the tileset
-	
-	return setmetatable(ts, TileSet)
+    assert( img and name and tilew and tileh and width and height and firstgid,
+           "TileSet:new - Needs at least 7 parameters for image, name, " ..
+           "tileWidth, tileHeight, width, height, and firstgid")
+    local ts = {}
+    
+    -- Public:
+    ts.image = img              -- The image of the tileset
+    ts.name = name              -- Name of the tilseset
+    ts.tileWidth = tilew        -- The width of each tile in pixels
+    ts.tileHeight = tileh       -- The height of each tile in pixels
+    ts.width = width            -- The width of the tileset image in pixels
+    ts.height = height          -- The height of the tileset image in pixels
+    ts.firstgid = firstgid      -- The id of the first tile
+    ts.spacing = space or 0     -- The spacing in pixels between each tile
+    ts.margin = marg or 0       -- The margin in pixels surrounding the entire tile set.
+    ts.tileProperties = tprop or {} -- Properties of contained tiles indexed by the tile's gid
+    ts.properties = prop or {}  -- The properties of the tileset
+    
+    return setmetatable(ts, TileSet)
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Returns the width in tiles
 function TileSet:tilesWide()
-	return ceil( (self.width - self.margin*2 - self.spacing) / 
-					  (self.tileWidth + self.spacing) )
+    return ceil( (self.width - self.margin*2 - self.spacing) / 
+                      (self.tileWidth + self.spacing) )
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Returns the height in tiles
 function TileSet:tilesHigh()
-	return ceil( (self.height - self.margin*2 - self.spacing) / 
-					  (self.tileHeight + self.spacing) )
+    return ceil( (self.height - self.margin*2 - self.spacing) / 
+                      (self.tileHeight + self.spacing) )
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Produces tiles from the settings and returns them in a table indexed by their id.
 -- These are cut out left-to-right, top-to-bottom.
 function TileSet:getTiles()
-	local x,y = self.margin, self.margin
-	local tiles = {}
-	local quad = false
-	local id = self.firstgid
-	local imageWidth, imageHeight = self.image:getWidth(), self.image:getHeight()
+    local x,y = self.margin, self.margin
+    local tiles = {}
+    local quad = false
+    local id = self.firstgid
+    local imageWidth, imageHeight = self.image:getWidth(), self.image:getHeight()
 
-	for i = 1, self:tilesHigh() do
-		for j = 1, self:tilesWide() do
-			quad = love.graphics.newQuad(x, y, self.tileWidth, self.tileHeight, imageWidth, imageHeight)
-			tiles[id] = Tile:new(id, self, quad, self.tileWidth, self.tileHeight, self.tileProperties[id])
-			x = x + self.tileWidth + self.spacing
-			id = id + 1
-		end
-		x = self.margin
-		y = y + self.tileHeight + self.spacing
-	end
-	
-	return tiles
+    for i = 1, self:tilesHigh() do
+        for j = 1, self:tilesWide() do
+            quad = love.graphics.newQuad(x, y, self.tileWidth, self.tileHeight, imageWidth, imageHeight)
+            tiles[id] = Tile:new(id, self, quad, self.tileWidth, self.tileHeight, self.tileProperties[id])
+            x = x + self.tileWidth + self.spacing
+            id = id + 1
+        end
+        x = self.margin
+        y = y + self.tileHeight + self.spacing
+    end
+    
+    return tiles
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -98,3 +98,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.--]]
+

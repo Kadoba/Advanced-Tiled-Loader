@@ -9,23 +9,23 @@ Tile.__index = Tile
 
 -- Creates a new tile and returns it.
 function Tile:new(id, tileset, quad, width, height, prop)
-	if not id or not tileset or not quad then
-		error("Tile:new - Needs at least 3 parameters for id, tileset and quad.")
-	end
-	local tile = setmetatable({}, Tile)
-	tile.id = id					-- The id of the tile
-	tile.tileset = tileset			-- The tileset this tile belongs to
-	tile.quad = quad 				-- The of the tileset that defines the tile
-	tile.width = width or 0			-- The width of the tile in pixels
-	tile.height = height or 0		-- The height of the tile in pixels
-	tile.properties = prop or {}	-- The properties of the tile set in Tiled
-	return tile
+    if not id or not tileset or not quad then
+        error("Tile:new - Needs at least 3 parameters for id, tileset and quad.")
+    end
+    local tile = setmetatable({}, Tile)
+    tile.id = id                    -- The id of the tile
+    tile.tileset = tileset          -- The tileset this tile belongs to
+    tile.quad = quad                -- The of the tileset that defines the tile
+    tile.width = width or 0         -- The width of the tile in pixels
+    tile.height = height or 0       -- The height of the tile in pixels
+    tile.properties = prop or {}    -- The properties of the tile set in Tiled
+    return tile
 end
 
 -- Draws the tile at the given location 
 function Tile:draw(x, y, rotation, scaleX, scaleY, offsetX, offsetY)
-	love.graphics.drawq(self.tileset.image, self.quad, self.tileset.tileoffset.x + x, 
-						self.tileset.tileoffset.y + y, rotation, scaleX, scaleY, offsetX, offsetY)
+    love.graphics.drawq(self.tileset.image, self.quad, self.tileset.tileoffset.x + x, 
+                        self.tileset.tileoffset.y + y, rotation, scaleX, scaleY, offsetX, offsetY)
 end
 
 -- Return the Tile class

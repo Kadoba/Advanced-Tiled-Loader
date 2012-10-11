@@ -7,63 +7,63 @@ Grid.__index = Grid
 ---------------------------------------------------------------------------------------------------
 -- Creates and returns a new grid
 function Grid:new()
-	local grid = {}
-	grid.cells = {}
-	return setmetatable(grid, Grid)
+    local grid = {}
+    grid.cells = {}
+    return setmetatable(grid, Grid)
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Gets the value of a single cell
 function Grid:get(x,y)
-	return self.cells[x] and self.cells[x][y]
+    return self.cells[x] and self.cells[x][y]
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Sets the value of a single cell
 function Grid:set(x,y,value)
-	if not self.cells[x] then self.cells[x] = {} end
-	self.cells[x][y] = value
+    if not self.cells[x] then self.cells[x] = {} end
+    self.cells[x][y] = value
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Iterate over all values
 local x, y, row, val
 function Grid:iterate()
-	x, y, row, val = nil, nil, nil, nil
-	return function()
-		repeat
-			if not y then 
-				x, row = next(self.cells, x) 
-				if not row then return end
-			end
-			y, val = next(row, y) 
-		until y
-		return x, y, val
-	end
+    x, y, row, val = nil, nil, nil, nil
+    return function()
+        repeat
+            if not y then 
+                x, row = next(self.cells, x) 
+                if not row then return end
+            end
+            y, val = next(row, y) 
+        until y
+        return x, y, val
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Iterate over a rectangle shape
 function Grid:rectangle(startX, startY, width, height, includeNil)
-	local x, y = startX, startY
-	return function()
-		while y <= startY + height do
-			while x <= startX + width do
-				x = x+1
-				if self(x-1,y) ~= nil or includeNil then 
-					return x-1, y, self(x-1,y)
-				end
-			end
-			x = startX
-			y = y+1
-		end
-		return nil
-	end
+    local x, y = startX, startY
+    return function()
+        while y <= startY + height do
+            while x <= startX + width do
+                x = x+1
+                if self(x-1,y) ~= nil or includeNil then 
+                    return x-1, y, self(x-1,y)
+                end
+            end
+            x = startX
+            y = y+1
+        end
+        return nil
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Iterate over a line. Set noDiag to true to keep from traversing diagonally.
-function Grid:line(startX, startY, endX, endY, noDiag, includeNil)	
+function Grid:line(startX, startY, endX, endY, noDiag, includeNil)  
     local dx = math.abs(endX - startX)
     local dy = math.abs(endY - startY)
     local x = startX
@@ -71,71 +71,71 @@ function Grid:line(startX, startY, endX, endY, noDiag, includeNil)
     local incrX = endX > startX and 1 or -1 
     local incrY = endY > startY and 1 or -1 
     local err = dx - dy
-	local err2 = err*2
-	local i = 1+dx+dy
-	local rx,ry,rv 
-	local checkX = false
-	return function()
-		while i>0 do 
-			rx,ry,rv = x,y,self(x,y)
-			err2 = err*2
-			while true do
-				checkX = not checkX		
-				if checkX == true or not noDiag then 
-					if err2 > -dy then
-						err = err - dy
-						x = x + incrX
-						i = i-1
-						if noDiag then break end
-					end
-				end
-				if checkX == false or not noDiag then
-					if err2 < dx then
-						err = err + dx
-						y = y + incrY
-						i = i-1
-						if noDiag then break end
-					end
-				end
-				if not noDiag then break end
-			end
-			if rx == endX and ry == endY then i = 0 end
-			if rv ~= nil or includeNil then return rx,ry,rv end
-		end
-		return nil
-	end
+    local err2 = err*2
+    local i = 1+dx+dy
+    local rx,ry,rv 
+    local checkX = false
+    return function()
+        while i>0 do 
+            rx,ry,rv = x,y,self(x,y)
+            err2 = err*2
+            while true do
+                checkX = not checkX     
+                if checkX == true or not noDiag then 
+                    if err2 > -dy then
+                        err = err - dy
+                        x = x + incrX
+                        i = i-1
+                        if noDiag then break end
+                    end
+                end
+                if checkX == false or not noDiag then
+                    if err2 < dx then
+                        err = err + dx
+                        y = y + incrY
+                        i = i-1
+                        if noDiag then break end
+                    end
+                end
+                if not noDiag then break end
+            end
+            if rx == endX and ry == endY then i = 0 end
+            if rv ~= nil or includeNil then return rx,ry,rv end
+        end
+        return nil
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Iterates over a circle of cells
 function Grid:circle(cx, cy, r, includeNil)
-	local x,y
-	x = x or cx-r
-	return function()
-		repeat
-			y = y == nil and cy or y <= cy and y-1 or y+1
-			while ((cx-x)*(cx-x)+(cy-y)*(cy-y)) >= r*r do
-				if x > cx+r then return nil end
-				x = x + (y < cy and 0 or 1)
-				y = cy + (y < cy and 1 or 0)
-			end
-		until self(x,y) ~= nil or includeNil
-		return x,y,self(x,y)
-	end
+    local x,y
+    x = x or cx-r
+    return function()
+        repeat
+            y = y == nil and cy or y <= cy and y-1 or y+1
+            while ((cx-x)*(cx-x)+(cy-y)*(cy-y)) >= r*r do
+                if x > cx+r then return nil end
+                x = x + (y < cy and 0 or 1)
+                y = cy + (y < cy and 1 or 0)
+            end
+        until self(x,y) ~= nil or includeNil
+        return x,y,self(x,y)
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Cleans the grid of empty rows. 
 function Grid:clean()
-	for key,row in pairs(self.cells) do
-		if not next(row) then self.cells[key] = nil end
-	end
+    for key,row in pairs(self.cells) do
+        if not next(row) then self.cells[key] = nil end
+    end
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Clears the grid
 function Grid:clear()
-	self.cells = {}
+    self.cells = {}
 end
 
 ---------------------------------------------------------------------------------------------------
