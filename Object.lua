@@ -54,9 +54,6 @@ function Object:new(layer, name, type, x, y, width, height, gid, prop)
     return obj
 end
 
-    1
-      
-
 ---------------------------------------------------------------------------------------------------
 -- Updates the draw information. Call this every time the object moves or changes size.
 function Object:updateDrawInfo()
