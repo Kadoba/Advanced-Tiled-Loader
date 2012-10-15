@@ -14,7 +14,6 @@ TileLayer.__call = Grid.__call
 ----------------------------------------------------------------------------------------------------
 -- Returns a new TileLayer
 function TileLayer:new(map, name, opacity, prop)
-
     if not map or not name then 
         error("TileLayer:new - Needs at least 2 parameters for the map and name.")
     end
@@ -118,6 +117,13 @@ function TileLayer:draw()
     -- Only draw if we're not using sprite batches or we need to update the sprite batches.
     if self._redraw or not useSpriteBatch then
     
+        -- Bind the sprite batches
+        if useSpriteBatch then 
+            for k, batch in pairs(self._batches) do
+                batch:bind()
+            end
+        end
+    
         -- Orthogonal tiles
         if map.orientation == "orthogonal" then
             -- Go through each tile
@@ -145,6 +151,7 @@ function TileLayer:draw()
                     if not self._batches[tile.tileset] then 
                         self._batches[tile.tileset] = love.graphics.newSpriteBatch(
                                                         tile.tileset.image, map.width * map.height)
+                        self._batches[tile.tileset]:bind()
                     end
                     -- Add the quad to the spritebatch
                     self._batches[tile.tileset]:addq(tile.quad, drawX + halfW, 
@@ -221,6 +228,8 @@ function TileLayer:draw()
                                                                 drawY-halfH+(rot and halfW or 0), 
                                                                 rot and math.pi*1.5 or 0, 
                                                                 flipX, flipY, halfW, halfH)
+                                    -- Bind the sprite batch
+                                    self._batches[tile.tileset]:bind()
                                                                     
                                 -- Not using sprite batches
                                 else
@@ -244,6 +253,14 @@ function TileLayer:draw()
                 end -- layer
             end -- down
         end --isometric
+        
+        -- Unbind the sprite batches
+         if useSpriteBatch then 
+            for k, batch in pairs(self._batches) do
+                batch:unbind()
+            end
+        end
+        
     end
     
     -- We finished redrawing
@@ -251,8 +268,8 @@ function TileLayer:draw()
     
     -- If sprite batches are turned on then render them
     if useSpriteBatch then
-        for k,v in pairs(self._batches) do
-            love.graphics.draw(v)
+        for k, batch in pairs(self._batches) do
+            love.graphics.draw(batch)
         end
     end
     
