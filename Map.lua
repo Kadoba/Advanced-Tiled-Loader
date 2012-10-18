@@ -23,37 +23,38 @@ Map.__index = Map
 
 ---------------------------------------------------------------------------------------------------
 -- Returns a new map
-function Map:new(name, width, height, tileWidth, tileHeight, orientation, properties)
+function Map:new(name, width, height, tileWidth, tileHeight, orientation, path, prop)
 
     -- Our map
     local map = setmetatable({}, Map)
+    prop = prop or {}
     
     -- Public:
-    map.name = name or "Unnamed Nap"                -- Name of the map
-    map.width = width or 0                          -- Width of the map in tiles
-    map.height = height or 0                        -- Height of the map in tiles
-    map.tileWidth = tileWidth or 0                  -- Width in pixels of each tile
-    map.tileHeight = tileHeight or 0                -- Height in pixels of each tile
-    map.orientation = orientation or "orthogonal"   -- Type of map. "orthogonal" or "isometric"
-    map.properties = properties or {}               -- Properties of the map set by Tiled
-    map.useSpriteBatch = true                       -- If true then TileLayers use sprite batches.
-    map.visible = true                              -- If false then the map will not be drawn
+    map.name = name or "Unnamed Map"                        -- Name of the map
+    map.width = width or 0                                  -- Width of the map in tiles
+    map.height = height or 0                                -- Height of the map in tiles
+    map.tileWidth = tileWidth or 0                          -- Width in pixels of each tile
+    map.tileHeight = tileHeight or 0                        -- Height in pixels of each tile
+    map.orientation = orientation or "orthogonal"           -- Type of map. orthogonal or isometric
+    map.properties = prop or {}                             -- Properties of the map set by Tiled
+    map.useSpriteBatch = prop.atl_useSpriteBatch            -- True = TileLayers use sprite batches
+    map.visible = true                                      -- False = the map will not be drawn
+    map.drawObjects = prop.atl_drawObjects                  -- True = object layers will be drawn
     
-    map.viewX = 0                                   -- X coord of the viewing screen. 
-    map.viewY = 0                                   -- Y coord of the viewing screen. 
-    map.viewW = love.graphics.getWidth()            -- The width of the viewing screen
-    map.viewH = love.graphics.getHeight()           -- The height of the viewing screen
-    map.viewScaling = 1                             -- The game scaling
-    map.viewPadding = 10                            -- Padding for the view
+    map.viewX = prop.atl_viewX or 0                         -- X coord of the viewing screen. 
+    map.viewY = prop.atl_viewY or 0                         -- Y coord of the viewing screen. 
+    map.viewW = prop.atl_viewW or love.graphics.getWidth()  -- The width of the viewing screen
+    map.viewH = prop.atl_viewH or love.graphics.getHeight() -- The height of the viewing screen
+    map.viewScaling = 1                                     -- The game scaling
+    map.viewPadding = 10                                    -- Padding for the view
     
-    map.offsetX = 0             -- Drawing offset X
-    map.offsetY = 0             -- Drawing offset Y
+    map.offsetX = prop.atl_offsetX or 0  -- Drawing offset X
+    map.offsetY = prop.atl_offsetY or 0  -- Drawing offset Y
     
     map.layers  = {}            -- Layers of the map indexed by name
     map.tilesets = {}           -- Tilesets indexed by name
     map.tiles = {}              -- Tiles indexed by id
-    map.layerOrder = {}         -- The order of the layers. Callbacks are called in this order.             
-    map.drawObjects = true      -- If true then object layers will be drawn
+    map.layerOrder = {}         -- The order of the layers. Callbacks are called in this order.
 
     -- Private:
     map._widestTile = 0                 -- The widest tile on the map.
@@ -61,6 +62,7 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, proper
     map._forceRedraw = false            -- If true then the next redraw is forced
     map._previousUseSpriteBatch = false -- The previous useSpiteBatch.
     map._tileClipboard  =   nil         -- The value that stored for tile copying and pasting.
+    map._directory = path               -- The directory the map is in
     
     -- Return the new map
     return map

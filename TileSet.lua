@@ -10,24 +10,25 @@ TileSet.__index = TileSet
 
 ----------------------------------------------------------------------------------------------------
 -- Creates a new tileset.
-function TileSet:new(img, name, tilew, tileh, width, height, firstgid, space, marg, tprop, prop)
-    assert( img and name and tilew and tileh and width and height and firstgid,
-           "TileSet:new - Needs at least 7 parameters for image, name, " ..
-           "tileWidth, tileHeight, width, height, and firstgid")
+function TileSet:new(img, imgPath, name, tw, th, w, h, gid, space, marg, offx, offy, trans, tprop, prop)
     local ts = {}
     
     -- Public:
-    ts.image = img              -- The image of the tileset
-    ts.name = name              -- Name of the tilseset
-    ts.tileWidth = tilew        -- The width of each tile in pixels
-    ts.tileHeight = tileh       -- The height of each tile in pixels
-    ts.width = width            -- The width of the tileset image in pixels
-    ts.height = height          -- The height of the tileset image in pixels
-    ts.firstgid = firstgid      -- The id of the first tile
-    ts.spacing = space or 0     -- The spacing in pixels between each tile
-    ts.margin = marg or 0       -- The margin in pixels surrounding the entire tile set.
+    ts.image = img                  -- The image of the tileset
+    ts.imagePath = imgPath          -- The path to the image file
+    ts.name = name                  -- Name of the tilseset
+    ts.tileWidth = tw               -- The width of each tile in pixels
+    ts.tileHeight = th              -- The height of each tile in pixels
+    ts.width = w                    -- The width of the tileset image in pixels
+    ts.height = h                   -- The height of the tileset image in pixels
+    ts.firstgid = gid               -- The id of the first tile
+    ts.spacing = space or 0         -- The spacing in pixels between each tile
+    ts.margin = marg or 0           -- The margin in pixels surrounding the entire tile set.
+    ts.trans = trans                -- The transparency value. Only used when saving maps.
+    ts.offsetX = offx               -- The X offset.
+    ts.offsetY = offy               -- The Y offset.
     ts.tileProperties = tprop or {} -- Properties of contained tiles indexed by the tile's gid
-    ts.properties = prop or {}  -- The properties of the tileset
+    ts.properties = prop or {}      -- The properties of the tileset
     
     return setmetatable(ts, TileSet)
 end

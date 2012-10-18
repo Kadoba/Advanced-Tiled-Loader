@@ -140,6 +140,40 @@ local function decode(mode, raw)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- Encodes a table of ints into a base64 string.
+local function encode(ints)
+
+    -- Clear the buffer
+    clearBuffer()
+    
+    local size = 0          -- Size of the returned type in bits
+    local val = {}          -- A table containing the data to be returned
+    local char = ""         -- The current base64 character to be processed
+    
+    -- If we're expected to return an int then the bit size is 32, otherwise it's 8
+    if mode == "int" then size = 32 else size = 8 end
+    
+    -- While we still have input
+    while raw_pos <= raw_size do
+        -- Fill the buffer until we have enough bits
+        while pos <= size and raw_pos <= raw_size do
+            char = sub(raw,raw_pos,raw_pos)
+            pushBase64( char )
+            raw_pos = raw_pos + 1
+        end
+        -- If a nil character is encountered the end the loop
+        if char == "=" then break end
+        -- Get data from the buffer depending on the type
+        if mode == "string" then val[#val+1] = string.char( getByte() ) end
+        if mode == "byte" then val[#val+1] = getByte() end
+        if mode == "int" then val[#val+1] = getInt() end
+    end
+    
+    if mode == "string" then return table.concat(val) end
+    return val
+end
+
+---------------------------------------------------------------------------------------------------
 -- Returns the functions
 return {decode = decode, glueInt = glueInt, base64 = base64}
 

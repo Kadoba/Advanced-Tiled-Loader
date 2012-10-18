@@ -61,7 +61,7 @@ function ObjectLayer:draw()
     di = nil                            -- The draw info
     dr = {self.map:getDrawRange()}      -- The drawing range. [1-4] = x, y, width, height
     drawList = {}                       -- A list of the objects to be drawn
-    r,g,b,a = love.graphics.getColor()  -- Save the color so we can set it back at the end
+    r,g,b,a = 255, 255, 255, 255 ---love.graphics.getColor()    -- Save the color so we can set it back at the end
     line = love.graphics.getLineWidth() -- Save the line width too
     self.color[4] = 255 * self.opacity  -- Set the opacity
     

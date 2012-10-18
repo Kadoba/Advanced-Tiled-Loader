@@ -20,23 +20,24 @@ function TileLayer:new(map, name, opacity, prop)
     
     local tl = setmetatable(Grid:new(), TileLayer)
     
-    -- Public:
-    tl.name = name              -- The name of the tile layer
-    tl.map = map                -- The map that this layer belongs to
-    tl.opacity = opacity or 1   -- The opacity to draw the tiles (0-1)
-    tl.properties = prop or {}  -- Properties set by Tiled
-    tl.visible = true           -- If false then the layer will not be drawn
-    tl.useSpriteBatch = nil     -- If true then the layer is rendered with sprite batches. If
-                                    -- false then the layer will not use sprite batches. If nil then 
-                                    -- map.useSpriteBatch will be used. Note that using sprite 
-                                    -- batches might break the draw order when using multiple 
-                                    -- tilesets on the same layer. Using Map.drawAfterTile is also 
-                                    -- not possible.
+    prop = prop or {}
     
-    tl.parallaxX = 1            -- The horizontal speed of the parallax. 1 is normal
-    tl.parallaxY = 1            -- The vertical speed of the parallax. 1 is normal
-    tl.offsetX = 0              -- Drawing offset X
-    tl.offsetY = 0              -- Drawing offset Y
+    -- Public:
+    tl.name = name                              -- The name of the tile layer
+    tl.map = map                                -- The map that this layer belongs to
+    tl.opacity = opacity or 1                   -- The opacity to draw the tiles (0-1)
+    tl.properties = prop                        -- Properties set by Tiled
+    tl.visible = true                           -- If false then the layer will not be drawn
+    
+    tl.useSpriteBatch = prop.alt_useSpriteBatch -- If true then the layer is rendered with sprite 
+                                                -- batches. If false then the layer will not use 
+                                                -- sprite batches. If nil then map.useSpriteBatch 
+                                                -- will be used. 
+    
+    tl.parallaxX = prop.atl_parallaxX or 1      -- The horizontal speed of the parallax. 1 is normal
+    tl.parallaxY = prop.atl_parallaxX or 1      -- The vertical speed of the parallax. 1 is normal
+    tl.offsetX = prop.atl_offsetX or 0          -- Drawing offset X
+    tl.offsetY = prop.atl_offsetY or 0          -- Drawing offset Y
     
     -- Private:
     tl._redraw = true                   -- If true then the layer needs to redraw tis sprite batches.

@@ -22,6 +22,8 @@ function Object:new(layer, name, type, x, y, width, height, gid, prop)
     obj.gid = gid               -- The object's associated tile. If false an outline will be drawn.
     obj.visible = true          -- If false then the object will not be drawn
     obj.properties = prop or {} -- Properties set by tiled.
+    obj.polygon = nil           -- Polygon points. Set by the Loader if defined in Tiled.
+    obj.polyline = nil          -- Polyline points. Set by the Loader if defined in Tiled.
     
     -- drawInfo stores values needed to actually draw the object. You can either set these yourself
     -- or use updateDrawInfo to do it automatically.

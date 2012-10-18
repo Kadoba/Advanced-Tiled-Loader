@@ -3,6 +3,10 @@ Advanced Tiled Loader
 
 CHANGES:
 
+0.12.0 (10/17/12)
+- Maps can now be saved with Loader.save()
+- Introduced ATL properties
+
 0.11.2 (10/08/12)
 - TileLayers will now calculate their own viewable tile range.
 - Added parallax support for TileLayers.

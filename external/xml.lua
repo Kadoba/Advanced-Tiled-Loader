@@ -8,7 +8,10 @@ local escaped = {
   ['&gt;'] = '>'
 }
 
-local function parseargs(s)
+local xml = {}
+
+---------------------------------------------------------------------------------------------------
+local function args_to_table(s)
   local arg = {}
   string.gsub(s, "(%w+)=([\"'])(.-)%2", function (w, _, a)
     for f, t in pairs(escaped) do
@@ -19,7 +22,8 @@ local function parseargs(s)
   return arg
 end
     
-local function collect(s)
+---------------------------------------------------------------------------------------------------
+function xml.string_to_table(s)
   local stack = {}
   local top = {}
   table.insert(stack, top)
@@ -33,9 +37,9 @@ local function collect(s)
       table.insert(top, text)
     end
     if empty == "/" then  -- empty element tag
-      table.insert(top, {label=label, xarg=parseargs(xarg), empty=1})
+      table.insert(top, {label=label, xarg=args_to_table(xarg), empty=1})
     elseif c == "" then   -- start tag
-      top = {label=label, xarg=parseargs(xarg)}
+      top = {label=label, xarg=args_to_table(xarg)}
       table.insert(stack, top)   -- new level
     else  -- end tag
       local toclose = table.remove(stack)  -- remove top
@@ -60,5 +64,66 @@ local function collect(s)
   return stack[1]
 end
 
-return collect
+---------------------------------------------------------------------------------------------------
+local function args_to_string(args)
+    if not args then return "" end
+    local str = ""
+    for k,v in pairs(args) do
+        str = str .. string.format(' %s="%s"', k, tostring(v))
+    end
+    return str
+end
+
+---------------------------------------------------------------------------------------------------
+local function expand(t, indent)
+    indent = indent .. "    "
+    local str = {}
+    for i = 1,#t do
+        if type(t[i]) == "table" then
+            str[#str+1] = xml.table_to_string(t[i], indent)
+        else
+            str[#str+1] = indent
+            str[#str+1] = t[i]
+            str[#str+1] = "\n"
+        end
+    end
+    return str
+end
+
+---------------------------------------------------------------------------------------------------
+local function flatten (t)
+  local n = { }
+  local function flatten_aux(t)
+    for k, v in ipairs(t) do
+      if type(v) == "table" then
+        flatten_aux(v)
+      else
+        n[#n+1] = v
+      end
+    end
+  end
+  flatten_aux(t)
+  return n
+end
+
+---------------------------------------------------------------------------------------------------
+function xml.table_to_string(t, indent)
+    if not indent then indent = "" end
+    local label = t.label
+    local xarg = args_to_string(t.xarg)
+    local str = {}
+    if #t > 0 then
+        local body = expand(t,indent)
+        str = {indent, "<", label, xarg, ">\n", body, indent, "</", label, ">\n"}
+    else
+        str = {indent, "<", label, xarg, "/>\n"}
+    end
+    if indent == "" then
+        return table.concat(flatten(str))
+    else
+        return str
+    end
+end
+
+return xml
 

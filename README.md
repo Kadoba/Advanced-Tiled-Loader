@@ -12,6 +12,7 @@ Supported features include:
 * zlib/gzip compression
 * Isometric maps
 * Flipped and rotated tiles
+* Saving loaded maps
 
 Example files can be found at https://github.com/Kadoba/Advanced-Tiled-Loader-Examples
 
