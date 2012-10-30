@@ -2,6 +2,10 @@ Advanced Tiled Loader
 --------------------------------------------------------------------------------------
 
 CHANGES:
+0.12.1 (10/31/12)
+- TileLayer:drawAfterTile() has been reworked into TileLayer:newAfterTileFunction()
+- Arguments for the Map functions that create and add map components directly to the 
+	map have changed. (Map:newTileLayer(), Map:newObjectLayer(), etc)
 
 0.12.0 (10/17/12)
 - Maps can now be saved with Loader.save()

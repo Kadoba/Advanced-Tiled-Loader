@@ -70,11 +70,11 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- Creates a new tileset and adds it to the map. The map will then auto-update its tiles.
-function Map:newTileSet(img, name, tilew, tileh, w, h, firstgid, space, marg, tprop)
+function Map:newTileSet(...)
     if not name then
         error("Map:newTileSet - The name parameter is invalid")
     end
-    self.tilesets[name] = TileSet:new(img, name, tilew, tileh, w, h, firstgid, space, marg, tprop)
+    self.tilesets[name] = TileSet:new(...)
     self:updateTiles()
     return self.tilesets[name]
 end
@@ -82,22 +82,22 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Creates a new TileLayer and adds it to the map. The position parameter is the position to insert
 -- the layer into the layerOrder.
-function Map:newTileLayer(name, opacity, properties, position)
+function Map:newTileLayer(position, ...)
     if self.layers[name] then 
         error( string.format("Map:newTileLayer - The layer name \"%s\" already exists.", name) )
     end
-    self.layers[name] = TileLayer:new(self, name, opacity, properties)
+    self.layers[name] = TileLayer:new(self, ...)
     table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
     return self.layers[name]
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Creates a new ObjectLayer and inserts it into the map
-function Map:newObjectLayer(name, color, opacity, properties, position)
+function Map:newObjectLayer(position, ...)
     if self.layers[name] then 
         error( string.format("Map:newObjectLayer - The layer name \"%s\" already exists.", name) )
     end
-    self.layers[name] = ObjectLayer:new(self, name, color, opacity, properties)
+    self.layers[name] = ObjectLayer:new(self, ...)
     table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
     return self.layers[name]
 end
