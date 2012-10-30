@@ -62,11 +62,8 @@ function TileLayer:clearAfterTileFunction()
 end
 
 ----------------------------------------------------------------------------------------------------
--- Adds a function that will be called after every tile. funct(layer, x, y, drawX, drawY ...)
-function TileLayer:newAfterTileFunction(funct, ...)
-    if self.useSpriteBatch ~= nil and self.useSpriteBatch or self.map.useSpriteBatch then 
-        error("TileLayer:drawAfterTile - This function is not possible with sprite batches enabled")
-    end
+-- Sets a function that will be called after every tile. funct(layer, x, y, drawX, drawY ...)
+function TileLayer:setAfterTileFunction(funct, ...)
     self._afterTileFunction = funct
     local args = {...}
     if #args > 0 then self._afterTileArgs = args end
