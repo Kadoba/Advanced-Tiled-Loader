@@ -712,7 +712,7 @@ function Loader._compactObject(object)
 
     -- <properties>
     if next(object.properties) then
-        objectx[#objectx+1] = Loader.compactProperties(object.properties)
+        objectx[#objectx+1] = Loader._compactProperties(object.properties)
     end
     
     return objectx
