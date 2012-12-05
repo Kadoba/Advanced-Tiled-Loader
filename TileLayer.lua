@@ -29,7 +29,7 @@ function TileLayer:new(map, name, opacity, prop)
     tl.properties = prop                        -- Properties set by Tiled
     tl.visible = true                           -- If false then the layer will not be drawn
     
-    tl.useSpriteBatch = prop.alt_useSpriteBatch -- If true then the layer is rendered with sprite 
+    tl.useSpriteBatch = prop.atl_useSpriteBatch -- If true then the layer is rendered with sprite 
                                                 -- batches. If false then the layer will not use 
                                                 -- sprite batches. If nil then map.useSpriteBatch 
                                                 -- will be used. 
