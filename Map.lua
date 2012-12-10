@@ -71,35 +71,41 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Creates a new tileset and adds it to the map. The map will then auto-update its tiles.
 function Map:newTileSet(...)
-    if not name then
-        error("Map:newTileSet - The name parameter is invalid")
+    local tileset = TileSet:new(...)
+    local name = tileset.name
+    if self.tilesets[name] then 
+        error(  string.format("Map:newTileSet - A tile set named \"%s\" already exists.", name) )
     end
     self.tilesets[name] = TileSet:new(...)
     self:updateTiles()
-    return self.tilesets[name]
+    return tileset
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Creates a new TileLayer and adds it to the map. The position parameter is the position to insert
 -- the layer into the layerOrder.
 function Map:newTileLayer(position, ...)
+    local layer = TileLayer:new(self, ...)
+    local name = layer.name
     if self.layers[name] then 
-        error( string.format("Map:newTileLayer - The layer name \"%s\" already exists.", name) )
+        error( string.format("Map:newTileLayer - A layer named \"%s\" already exists.", name) )
     end
-    self.layers[name] = TileLayer:new(self, ...)
-    table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
-    return self.layers[name]
+    self.layers[name] = layer
+    table.insert(self.layerOrder, position or #self.layerOrder + 1, layer)
+    return layer
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Creates a new ObjectLayer and inserts it into the map
 function Map:newObjectLayer(position, ...)
+    local layer = ObjectLayer:new(self, ...)
+    local name = layer.name
     if self.layers[name] then 
-        error( string.format("Map:newObjectLayer - The layer name \"%s\" already exists.", name) )
+        error( string.format("Map:newObjectLayer - A layer named \"%s\" already exists.", name) )
     end
-    self.layers[name] = ObjectLayer:new(self, ...)
-    table.insert(self.layerOrder, position or #self.layerOrder + 1, self.layers[name])
-    return self.layers[name]
+    self.layers[name] = layer
+    table.insert(self.layerOrder, position or #self.layerOrder + 1, layer)
+    return layer
 end
 
 ---------------------------------------------------------------------------------------------------
