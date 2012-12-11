@@ -106,7 +106,7 @@ function Object:updateDrawInfo()
             di.x, di.y  = map:fromIso(self.x, self.y)
             di.x, di.y = di.x - map.offsetX, di.y - map.offsetY
             di.order = di.y
-            di.x, di.y = di.x - map.tileWidth/2, di.y - th
+            di.x = di.x - map.tileWidth/2
             di.left, di.right, di.top, di.bottom = di.x, di.x+tw, di.y , di.y +th
         -- Is not a tile object
         else
@@ -130,7 +130,6 @@ function Object:updateDrawInfo()
             local tw, th = t.width, t.height
             di.x, di.y = self.x - map.offsetX, self.y - map.offsetY
             di.order = di.y
-            di.y = di.y - th
             di.left, di.top, di.right, di.bottom = di.x, di.y, di.x+tw, di.y+th
         -- Is not a tile object
         else
