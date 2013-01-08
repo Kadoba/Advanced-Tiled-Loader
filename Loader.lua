@@ -250,12 +250,20 @@ function Loader._expandTileSet(t, map)
     Loader._checkXML(t)
     assert(t.label == "tileset", "Loader._expandTileSet - Passed table is not a tileset")
     
+    local tilesetDir = map._directory
+
     -- If the tileset is an external one then replace it as the tileset. The firstgid is 
     -- stored in the tileset tag in the original file while the rest of the tileset information 
     -- is stored in the external file.
     if t.xarg.source then 
         local gid = t.xarg.firstgid
-        t = love.filesystem.read(map._directory .. t.xarg.source)
+        local path = map._directory .. t.xarg.source
+        -- Process directory up
+        while string.find(path, "[^/^\\]+[/\\]%.%.[/\\]") do
+            path = string.gsub(path, "[^/^\\]+[/\\]%.%.[/\\]", "", 1)
+        end
+        tilesetDir = string.gsub(path, "[^/^\\]+$", "")
+        t = love.filesystem.read(path)
         for _,v in pairs(xml.string_to_table(t)) do if v.label == "tileset" then t = v end end
         t.xarg.firstgid = gid
     end
@@ -275,7 +283,7 @@ function Loader._expandTileSet(t, map)
         -- Process image
         if v.label == "image" then 
             imagePath = v.xarg.source
-            path = map._directory .. v.xarg.source
+            path = tilesetDir .. v.xarg.source
             -- Process directory up
             while string.find(path, "[^/^\\]+[/\\]%.%.[/\\]") do
                 path = string.gsub(path, "[^/^\\]+[/\\]%.%.[/\\]", "", 1)
