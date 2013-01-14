@@ -239,6 +239,8 @@ function TileLayer:draw()
                                         self._batches[tile.tileset] = love.graphics.newSpriteBatch(
                                                                             tile.tileset.image, 
                                                                             map.width * map.height)
+                                        -- Bind the sprite batch
+                                        self._batches[tile.tileset]:bind()
                                     end
                                     -- Add the tile to the sprite batch.
                                     self._batches[tile.tileset]:addq(tile.quad, drawX + halfW + 
@@ -246,8 +248,6 @@ function TileLayer:draw()
                                                                 drawY-halfH+(rot and halfW or 0), 
                                                                 rot and math.pi*1.5 or 0, 
                                                                 flipX, flipY, halfW, halfH)
-                                    -- Bind the sprite batch
-                                    self._batches[tile.tileset]:bind()
                                                                     
                                 -- Not using sprite batches
                                 else
