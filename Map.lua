@@ -258,8 +258,8 @@ function Map:_updateTileRange()
             -- Get the draw range. 
             x1 = self.viewX * layer.parallaxX - self.viewPadding + layer.offsetX
             y1 = self.viewY * layer.parallaxY - self.viewPadding + layer.offsetY
-            x2 = self.viewW/self.viewScaling + self.viewPadding*2
-            y2 = self.viewH/self.viewScaling + self.viewPadding*2
+            x2 = (self.viewW+x1)/self.viewScaling + self.viewPadding*2
+            y2 = (self.viewH+y1)/self.viewScaling + self.viewPadding*2
             
             -- Apply the offset
             x1 = x1 - self.offsetX - layer.offsetX
