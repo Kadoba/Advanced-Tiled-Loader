@@ -41,21 +41,25 @@ local filename  -- The name of the tmx file
 local fullpath  -- The full path to the tmx file minus the name
 
 ----------------------------------------------------------------------------------------------------
+-- Processes directory up paths
+local function directoryUp(path)
+    while string.find(path, "[^/^\\]+[/\\]%.%.[/\\]") do
+        path = string.gsub(path, "[^/^\\]+[/\\]%.%.[/\\]", "/", 1)
+    end
+    return path
+end
+
+----------------------------------------------------------------------------------------------------
 -- Loads a Map from a tmx file and returns it.
 function Loader.load(tofile)
     
     -- Get the raw path
-    fullpath = Loader.path .. tofile
-    
-    -- Process directory up
-    while string.find(fullpath, "[/\\][^/^\\]+[/\\]%.%.[/\\]") do
-        fullpath = string.gsub(fullpath, "[/\\][^/^\\]+[/\\]%.%.[/\\]", "/", 1)
-    end
+    fullpath = directoryUp(Loader.path .. tofile)
     
     -- Get the file name
     filename = string.match(fullpath, "[^/^\\]+$")
     
-    -- Get the path to the file
+    -- Get the path to the folder containing the file
     fullpath = string.gsub(fullpath, "[^/^\\]+$", "")
     
     -- Find out if the file is in the game or save directory
@@ -250,20 +254,25 @@ function Loader._expandTileSet(t, map)
     Loader._checkXML(t)
     assert(t.label == "tileset", "Loader._expandTileSet - Passed table is not a tileset")
     
+    -- Directory of the tileset
+    local tilesetDir = map._directory
+    
     -- If the tileset is an external one then replace it as the tileset. The firstgid is 
     -- stored in the tileset tag in the original file while the rest of the tileset information 
     -- is stored in the external file.
     if t.xarg.source then 
         local gid = t.xarg.firstgid
-        t = love.filesystem.read(map._directory .. t.xarg.source)
+        local path = directoryUp(tilesetDir .. t.xarg.source)
+        t = love.filesystem.read(path)
+        tilesetDir = string.gsub(path, "[^/^\\]+$", "")
         for _,v in pairs(xml.string_to_table(t)) do if v.label == "tileset" then t = v end end
         t.xarg.firstgid = gid
     end
     
+    -- Make sure everything loaded correctly
     if not t.xarg.name or not t.xarg.tilewidth or not t.xarg.tileheight or not t.xarg.firstgid then
         error("Loader._expandTileSet - Tileset data is corrupt")
     end
-
     
     -- Temporary storage
     local image, imagePath, imageWidth, imageHeight, path, prop, tileSetProperties, trans
@@ -275,11 +284,7 @@ function Loader._expandTileSet(t, map)
         -- Process image
         if v.label == "image" then 
             imagePath = v.xarg.source
-            path = map._directory .. v.xarg.source
-            -- Process directory up
-            while string.find(path, "[^/^\\]+[/\\]%.%.[/\\]") do
-                path = string.gsub(path, "[^/^\\]+[/\\]%.%.[/\\]", "", 1)
-            end
+            path = directoryUp(tilesetDir .. v.xarg.source)
             -- If the image is in the cache then load it
             if cache[path] then
                 image = cache[path]
@@ -712,7 +717,7 @@ function Loader._compactObject(object)
 
     -- <properties>
     if next(object.properties) then
-        objectx[#objectx+1] = Loader._compactProperties(object.properties)
+        objectx[#objectx+1] = Loader.compactProperties(object.properties)
     end
     
     return objectx
