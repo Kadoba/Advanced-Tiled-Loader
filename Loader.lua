@@ -100,6 +100,9 @@ function Loader.save(map, filename)
     local mapx = Loader._compactMap(map)
     if not love.filesystem.exists(Loader.saveDirectory) then
         love.filesystem.mkdir(Loader.saveDirectory)
+	if not love.filesystem.exists(Loader.saveDirectory) then
+	    error("Could not create map save directory '" .. Loader.saveDirectory .. "'. \n-  Write access to '" .. love.filesystem.getSaveDirectory() .. "' denied or read only?\n-  Identity not set in 'conf.lua' or by love.filesystem.setIdentity()?")
+	end
     end
     love.filesystem.write( Loader.saveDirectory .. "/" .. filename, xml.table_to_string(mapx) )
 end
@@ -720,9 +723,14 @@ function Loader._compactObject(object)
         objectx[#objectx+1] = polygonx
     end
 
+    -- <ellipse>
+    if object.ellipse then
+	objectx[#objectx+1] = {label = "ellipse", xarg = {}}
+    end
+
     -- <properties>
     if next(object.properties) then
-        objectx[#objectx+1] = Loader.compactProperties(object.properties)
+        objectx[#objectx+1] = Loader._compactProperties(object.properties)
     end
     
     return objectx
