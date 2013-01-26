@@ -486,6 +486,11 @@ function Loader._expandObjectLayer(t, map)
                     obj.polygon = {}
                     string.gsub(v2.xarg.points, "[%-%d]+", polygonFunct)
                 end
+
+		--Process ellipse objects
+		if v2.label == "ellipse" then
+		    obj.ellipse = {}
+		end
             
             end
             obj:updateDrawInfo()
