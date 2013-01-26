@@ -271,7 +271,7 @@ function Map:_updateTileRange()
                 -- Limit the drawing range. We must make sure we can draw the tiles that are bigger
                 -- than the self's tileWidth and tileHeight.
                 if x1 and y1 and x2 and y2 then
-                    x2 = ceil(x2/self.tileWidth)
+                    x2 = ceil((x2+self._widestTile-self.tileWidth)/self.tileWidth)
                     y2 = ceil((y2+heightOffset)/self.tileHeight)
                     x1 = floor((x1-widthOffset)/self.tileWidth)
                     y1 = floor(y1/self.tileHeight)
