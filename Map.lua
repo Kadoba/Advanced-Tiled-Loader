@@ -241,7 +241,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- This is an internal function used to update the map's _tileRange, _previousTileRange, and 
 -- _specialRedraw
-local x1, y1, x2, y2, highOffset, widthOffset, tr, ptr, layer
+local x1, y1, x2, y2, heightOffset, widthOffset, tr, ptr, layer
 function Map:_updateTileRange()
     
     -- Offset to make sure we can always draw the highest and widest tile
