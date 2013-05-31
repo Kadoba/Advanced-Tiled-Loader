@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 
 -- Define path so lua knows where to look for files.
-TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Ll]oader$", "") .. '.'
+TILED_LOADER_PATH = ({...})[1]:gsub("[%.\\/][Ll]oader$", "") .. '.'
 
 -- A cache to store tileset images so we don't load them multiple times. Filepaths are keys.
 local cache = setmetatable({}, {__mode = "v"})
