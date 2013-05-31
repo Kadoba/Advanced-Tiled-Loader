@@ -10,6 +10,7 @@ local Grid = require(TILED_LOADER_PATH .. "Grid")
 local TileLayer = {class = "TileLayer"}
 TileLayer.__index = function(t, i) return TileLayer[i] or Grid[i] end
 TileLayer.__call = Grid.__call
+rot = nil
 
 ----------------------------------------------------------------------------------------------------
 -- Returns a new TileLayer

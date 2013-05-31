@@ -4,7 +4,7 @@
 -- Setup
 
 -- Import the other classes
-TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Mm]ap$", "") .. '.'
+TILED_LOADER_PATH = ({...})[1]:gsub("[%.\\/][Mm]ap$", "") .. '.'
 local Tile = require( TILED_LOADER_PATH .. "Tile")
 local TileSet = require( TILED_LOADER_PATH .. "TileSet")
 local TileLayer = require( TILED_LOADER_PATH .. "TileLayer")
