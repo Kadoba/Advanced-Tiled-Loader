@@ -23,7 +23,7 @@ Map.__index = Map
 
 ---------------------------------------------------------------------------------------------------
 -- Returns a new map
-function Map:new(name, width, height, tileWidth, tileHeight, orientation, path, prop)
+function Map:new(name, width, height, tileWidth, tileHeight, orientation, bgcolor, path, prop)
 
     -- Our map
     local map = setmetatable({}, Map)
@@ -36,6 +36,7 @@ function Map:new(name, width, height, tileWidth, tileHeight, orientation, path, 
     map.tileWidth = tileWidth or 0                          -- Width in pixels of each tile
     map.tileHeight = tileHeight or 0                        -- Height in pixels of each tile
     map.orientation = orientation or "orthogonal"           -- Type of map. orthogonal or isometric
+    map.backgroundColor = bgcolor or { 0, 0, 0 }            -- Background color { r, g, b }
     map.properties = prop or {}                             -- Properties of the map set by Tiled
     map.useSpriteBatch = prop.atl_useSpriteBatch            -- True = TileLayers use sprite batches
     map.visible = true                                      -- False = the map will not be drawn

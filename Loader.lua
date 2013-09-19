@@ -196,11 +196,22 @@ function Loader._expandMap(name, t)
             props = Loader._expandProperties(v)
         end
     end
-    
+
+    -- Unpack background color if set
+    local bgcolor = t.xarg.backgroundcolor
+    if bgcolor then
+        bgcolor = { tonumber( "0x" .. bgcolor:sub(2,3) ),
+                    tonumber( "0x" .. bgcolor:sub(4,5) ),
+                    tonumber( "0x" .. bgcolor:sub(6,7) )}
+        assert (#bgcolor == 3 and bgcolor[1] and bgcolor[2] and bgcolor[3],
+                "Loader._expandMap - Background color is corrupt")
+    end
+
     -- Create the map from the settings
-    local map = Map:new(name, tonumber(t.xarg.width),tonumber(t.xarg.height), 
-                        tonumber(t.xarg.tilewidth), tonumber(t.xarg.tileheight), 
-                        t.xarg.orientation, props.atl_directory or fullpath, props)
+    local map = Map:new(name, tonumber(t.xarg.width),tonumber(t.xarg.height),
+                        tonumber(t.xarg.tilewidth), tonumber(t.xarg.tileheight),
+                        t.xarg.orientation, bgcolor,
+                        props.atl_directory or fullpath, props)
 
     -- Apply the loader settings if atl_useSpriteBatch or atl_drawObjects was not set
     map.useSpriteBatch = map.useSpriteBatch == nil and Loader.useSpriteBatch or map.useSpriteBatch 
