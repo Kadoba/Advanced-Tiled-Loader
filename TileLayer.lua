@@ -160,7 +160,7 @@ function TileLayer:draw()
                         self._batches[tile.tileset]:bind()
                     end
                     -- Add the quad to the spritebatch
-                    self._batches[tile.tileset]:addq(tile.quad, drawX + halfW, 
+                    self._batches[tile.tileset]:add(tile.quad, drawX + halfW, 
                                     drawY - halfH, 
                                     rot and math.pi*1.5 or 0, 
                                     flipX, flipY, halfW, halfH)
@@ -243,7 +243,7 @@ function TileLayer:draw()
                                         self._batches[tile.tileset]:bind()
                                     end
                                     -- Add the tile to the sprite batch.
-                                    self._batches[tile.tileset]:addq(tile.quad, drawX + halfW + 
+                                    self._batches[tile.tileset]:add(tile.quad, drawX + halfW + 
                                                                 (rot and halfW or 0), 
                                                                 drawY-halfH+(rot and halfW or 0), 
                                                                 rot and math.pi*1.5 or 0, 
