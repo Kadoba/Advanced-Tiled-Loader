@@ -2,6 +2,8 @@
 ========
 Advanced Tiled Loader (ATL) loads and renders [Tiled](http://www.mapeditor.org/) maps inside of the [Löve2D](http://love2d.org) game framework.
 
+ATL is no longer being actively developed. Please consider using an alternative library such as [STI](https://github.com/karai17/Simple-Tiled-Implementation).
+
 Supported features include:
 * Multiple Layers
 * All object types (regular, polygon, and tile)
