@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------------------------------
 -- Setup
 TILED_LOADER_PATH = TILED_LOADER_PATH or ({...})[1]:gsub("[%.\\/][Tt]ile[Ss]et", "") .. '.'
-local ceil = math.ceil
+local floor = math.floor
 local Tile = require( TILED_LOADER_PATH .. "Tile")
 local TileSet = {class = "TileSet"}
 TileSet.__index = TileSet
@@ -36,14 +36,14 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Returns the width in tiles
 function TileSet:tilesWide()
-    return ceil( (self.width - self.margin*2 - self.spacing) / 
+    return floor( (self.width - self.margin*2 - self.spacing) / 
                       (self.tileWidth + self.spacing) )
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Returns the height in tiles
 function TileSet:tilesHigh()
-    return ceil( (self.height - self.margin*2 - self.spacing) / 
+    return floor( (self.height - self.margin*2 - self.spacing) / 
                       (self.tileHeight + self.spacing) )
 end
 
