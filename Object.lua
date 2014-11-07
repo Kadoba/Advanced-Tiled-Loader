@@ -105,9 +105,9 @@ function Object:updateDrawInfo()
             local tw, th = t.width, t.height
             di.x, di.y  = map:fromIso(self.x, self.y)
             di.x, di.y = di.x - map.offsetX, di.y - map.offsetY
-            di.order = di.y
             di.x = di.x - map.tileWidth/2
             di.left, di.right, di.top, di.bottom = di.x, di.x+tw, di.y , di.y +th
+            di.order = di.bottom + (self.properties.z or t.properties.z or 0)
         -- Is not a tile object
         else
             di[1], di[2] = map:fromIso(self.x, self.y)
@@ -129,13 +129,27 @@ function Object:updateDrawInfo()
             local t = map.tiles[self.gid]
             local tw, th = t.width, t.height
             di.x, di.y = self.x - map.offsetX, self.y - map.offsetY
-            di.order = di.y
-            di.left, di.top, di.right, di.bottom = di.x, di.y, di.x+tw, di.y+th
+            di.left, di.top, di.right, di.bottom = di.x, di.y - th, di.x+tw, di.y
+            di.order = di.bottom + (self.properties.z or t.properties.z or 0)
         -- Is not a tile object
+	--Is an ellipse
+	elseif self.ellipse then
+            di.x, di.y = self.x - map.offsetX, self.y - map.offsetY
+	    local xr = self.width / 2
+	    local yr = self.height / 2
+	    local segments = math.max(self.properties.segments or 16, 8)
+	    for i=1, segments do
+		local ang = math.pi * 2 * i / segments
+		di[i * 2 - 1] = di.x + xr * (1 + math.cos(ang))
+		di[i * 2    ] = di.y + yr * (1 + math.sin(ang))
+	    end
+            di.left, di.top, di.right, di.bottom = di.x, di.y , di.x+self.width, di.y +self.height
+            di.order = 1
+	--Is a rectangle
         else
             di.x, di.y = self.x - map.offsetX, self.y - map.offsetY
             di[1], di[2] = di.x, di.y
-            di[3], di[4] = self.width > 20 and self.width or 20, self.height > 20 and self.height or 20
+	    di[3], di[4] = self.width > 5 and self.width or 20, self.height > 5 and self.height or 20
             di.left, di.top, di.right, di.bottom = di.x, di.y , di.x+di[3], di.y +di[4]
             di.order = 1
         end
@@ -193,17 +207,29 @@ function Object:draw(x, y, r, g, b, a)
     -- Map is orthogonal. Draw a rectangle.
     else
         love.graphics.setColor(r, g, b, a/5)
-        love.graphics.rectangle("fill", unpack(di))
+	if self.ellipse then
+	    love.graphics.polygon("fill", unpack(di))
+	else
+	    love.graphics.rectangle("fill", unpack(di))
+	end
             
         love.graphics.setColor(0, 0, 0, a)
         love.graphics.push()
         love.graphics.translate(1,1)
-        love.graphics.rectangle("line", unpack(di))
+	if self.ellipse then
+	    love.graphics.polygon("line", unpack(di))
+	else
+	    love.graphics.rectangle("line", unpack(di))
+	end
         love.graphics.print(self.name, di.x, di.y-20)
         love.graphics.pop()
             
         love.graphics.setColor(r,g,b,a)
-        love.graphics.rectangle("line", unpack(di))
+	if self.ellipse then
+	    love.graphics.polygon("line", unpack(di))
+	else
+	    love.graphics.rectangle("line", unpack(di))
+	end
         love.graphics.print(self.name, di.x, di.y-20)
     end
 end
