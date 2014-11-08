@@ -244,8 +244,10 @@ function TileLayer:draw()
                                     end
                                     -- Add the tile to the sprite batch.
                                     self._batches[tile.tileset]:add(tile.quad, drawX + halfW + 
+                                                                tile.tileset.offsetX +
                                                                 (rot and halfW or 0), 
-                                                                drawY-halfH+(rot and halfW or 0), 
+                                                                drawY-halfH+tile.tileset.offsetY +
+                                                                (rot and halfW or 0), 
                                                                 rot and math.pi*1.5 or 0, 
                                                                 flipX, flipY, halfW, halfH)
                                                                     
