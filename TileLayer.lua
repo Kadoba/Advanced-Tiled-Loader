@@ -46,12 +46,31 @@ function TileLayer:new(map, name, opacity, prop)
     tl._batches = {}                    -- Keeps track of the sprite batches for each tileset
     tl._flippedTiles = Grid:new()       -- Stores the flipped tile locations. 
                                             -- 1 = flipped X, 2 = flipped Y, 3 = both
+    tl._beforeTileFunction = nil         -- A function that handles drawing things before individual
+                                            -- tiles. This will not work with SpriteBatches.
+    tl._beforeTileArgs = nil             -- Starting arguments for the before tile function                          
     tl._afterTileFunction = nil         -- A function that handles drawing things after individual
                                             -- tiles. This will not work with SpriteBatches.
     tl._afterTileArgs = nil             -- Starting arguments for the after tile function
     tl._previousUseSpriteBatch = false  -- The previous useSpriteBatch. If this is different then we 
                                             -- need to force a special redraw
     return tl
+end
+
+
+----------------------------------------------------------------------------------------------------
+-- Clears the tile layer of its before tile function.
+function TileLayer:clearBeforeTileFunction()
+    self._beforeTileFunction = nil
+    self._beforeTileArgs = nil
+end
+
+----------------------------------------------------------------------------------------------------
+-- Sets a function that will be called before every tile. funct(layer, x, y, drawX, drawY ...)
+function TileLayer:setBeforeTileFunction(funct, ...)
+    self._beforeTileFunction = funct
+    local args = {...}
+    if #args > 0 then self._beforeTileArgs = args end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -167,6 +186,16 @@ function TileLayer:draw()
                                     
                 -- If we are not using spritebatches
                 else
+                    -- Call the before tile function
+                    if self._beforeTileFunction then 
+                        if self._beforeTileArgs then
+                            self._beforeTileFunction(self, x, y, drawX, drawY,
+                                                    unpack(self._afterTileArgs))
+                        else
+                            self._beforeTileFunction(self, x, y, drawX, drawY)
+                        end
+                    end
+
                     -- Draw the tile
                     tile:draw(drawX + halfW,
                           drawY - halfH, 
@@ -177,7 +206,7 @@ function TileLayer:draw()
                     if self._afterTileFunction then 
                         if self._afterTileArgs then
                             self._afterTileFunction(self, x, y, drawX, drawY, 
-                                                    unpack(self._afterTileArgs))
+                                                    unpack(self._beforeTileArgs))
                         else
                             self._afterTileFunction(self, x, y, drawX, drawY)
                         end
@@ -251,6 +280,16 @@ function TileLayer:draw()
                                                                     
                                 -- Not using sprite batches
                                 else
+                                    -- Call the before tile function
+                                    if self._beforeTileFunction then 
+                                        if self._beforeTileArgs then
+                                            self._beforeTileFunction(self, x, y, drawX, drawY,
+                                                                    unpack(self._beforeTileArgs))
+                                        else
+                                            self._beforeTileFunction(self, x, y, drawX, drawY)
+                                        end
+                                    end
+
                                     tile:draw(drawX + halfW + (rot and halfW or 0), 
                                                 drawY - halfH + (rot and halfW or 0), 
                                                 rot and math.pi*1.5 or 0, 
